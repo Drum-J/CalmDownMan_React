@@ -1,11 +1,35 @@
 import './Header.css';
-import {Box, Stack, Typography} from "@mui/material";
-import {Link} from "react-router-dom";
+import {Box, IconButton, Menu, MenuItem, Stack, Typography} from "@mui/material";
+import {Link, useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import api from "../api/axios.jsx";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Header() {
     const [nickname, setNickname] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+    const navigate = useNavigate();
+
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = () => {
+        handleClose();
+        onLogout();
+    };
+
+    const onLogout = async () => {
+        const response = await api.post('/token/logout');
+        alert(response.data.data);
+        localStorage.removeItem('token');
+        navigate('/login');
+    }
 
     const fetchData = async () => {
         try {
@@ -40,9 +64,28 @@ export default function Header() {
                     </Stack>
                 </Box>
 
-                <Box className="nickname">
+                <Box className="nickname" onClick={handleClick} sx={{ cursor: 'pointer' }}>
                     {nickname}님
                 </Box>
+
+                <Menu
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                >
+                    <MenuItem onClick={handleLogout}>
+                        <CloseIcon/>
+                        로그아웃
+                    </MenuItem>
+                </Menu>
             </Box>
         </Box>
     );

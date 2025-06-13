@@ -17,6 +17,20 @@ instance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+// 리프레시 완료 후 대기 중인 요청에 새 토큰 전달
+function onRefreshed(token) {
+    refreshSubscribers.forEach((callback) => callback(token));
+    refreshSubscribers = [];
+}
+
+// 리프레시 대기 등록
+function addRefreshSubscriber(callback) {
+    refreshSubscribers.push(callback);
+}
+
 // 응답 인터셉터: 401 → 토큰 재발급 / 403 → 권한 경고
 instance.interceptors.response.use(
     (response) => response,
@@ -27,6 +41,19 @@ instance.interceptors.response.use(
         // 401 Unauthorized → 토큰 재발급
         if (status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
+
+            if (isRefreshing) {
+                // 리프레시 중이면 Promise 대기
+                return new Promise((resolve) => {
+                    addRefreshSubscriber((newToken) => {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        resolve(instance(originalRequest)); // 재요청
+                    });
+                });
+            }
+
+            isRefreshing = true;
+
             try {
                 const refreshResponse = await axios.post(
                     "http://localhost:8080/api/token/refresh",
@@ -34,10 +61,13 @@ instance.interceptors.response.use(
                     { withCredentials: true }
                 );
 
-                const newAccessToken = refreshResponse.data.data.accessToken;
-
+                const newAccessToken = refreshResponse.data.data;
                 // 새 토큰 저장
                 localStorage.setItem("token", newAccessToken);
+
+                // 대기 중인 요청들 처리
+                onRefreshed(newAccessToken);
+                isRefreshing = false;
 
                 // 재시도 요청에 새 토큰 부착
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
