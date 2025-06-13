@@ -1,0 +1,19 @@
+/* modal.css */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: #1f2937; /* tailwind bg-gray-800에 해당 */
+    color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    width: 320px;
+    text-align: center;
+}
