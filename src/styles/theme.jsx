@@ -10,7 +10,7 @@ export const theme = () =>
                 dark: '#0d1117',
             },
             secondary: {
-                main: '#0073E6',
+                main: '#a3acb6',
             },
             error: {
                 main: '#f44336',
