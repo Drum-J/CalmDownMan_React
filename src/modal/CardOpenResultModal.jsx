@@ -2,7 +2,7 @@ import React from "react";
 import {
     Button,
     Card,
-    CardContent as MuiCardContent,
+    CardContent,
     CardMedia,
     Dialog, DialogActions,
     DialogContent,
@@ -43,13 +43,13 @@ export default function CardResultModal({ open, onClose, cards }) {
                                     alt={card.title}
                                     referrerPolicy="no-referrer"
                                 />
-                                <MuiCardContent>
+                                <CardContent>
                                     <Typography variant="h6">{card.title}</Typography>
                                     <Typography variant="body2">등급: {card.grade}</Typography>
-                                    <Typography variant="body2">공격: {card.attackType}</Typography>
                                     <Typography variant="body2">파워: {card.power}</Typography>
-                                    <Typography variant="body2">시즌: {card.cardSeason}</Typography>
-                                </MuiCardContent>
+                                    <Typography variant="body2">공격: {card.attackType}</Typography>
+                                    <Typography variant="body2" color="text.secondary">시즌: {card.cardSeason}</Typography>
+                                </CardContent>
                             </Card>
                         </Grid>
                     ))}

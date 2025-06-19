@@ -29,6 +29,11 @@ function Signup() {
 
     const handleCheckUsername = async () => {
         try {
+            if (!username) {
+                setUsernameMessage("아이디를 입력해주세요!");
+                return;
+            }
+
             const response = await api.get("/signup/checkUsername", {
                 params: {username},
             });

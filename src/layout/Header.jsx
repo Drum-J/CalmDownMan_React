@@ -57,7 +57,7 @@ export default function Header() {
                 <Box className="navbar">
                     <Stack direction="row" spacing={4}>
                         <Link to="/">카드 뽑기</Link>
-                        <Link to="/">도감</Link>
+                        <Link to="/cardDex">도감</Link>
                         <Link to="/">게임</Link>
                         <Link to="/">교환</Link>
                         <Link to="/">마이페이지</Link>

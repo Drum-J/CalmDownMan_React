@@ -5,6 +5,7 @@ import Signup from "./pages/Signup.jsx";
 import Home from "./pages/Home.jsx";
 import Layout from "./layout/Layout.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
+import CardDex from "./pages/CardDex.jsx";
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                         <Layout>
                             <Routes>
                                 <Route path="/" element={<Home/>}/>
+                                <Route path="/cardDex" element={<CardDex/>}/>
                             </Routes>
                         </Layout>
                     </RequireAuth>
