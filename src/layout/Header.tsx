@@ -1,42 +1,46 @@
 import './Header.css';
-import {Box, IconButton, Menu, MenuItem, Stack, Typography} from "@mui/material";
+import {Box, Menu, MenuItem, Stack, Typography} from "@mui/material";
 import {Link, useNavigate} from "react-router-dom";
-import {useEffect, useState} from "react";
-import api from "../api/axios.jsx";
+import {useEffect, useState, MouseEvent} from "react";
+import api from "../common/axios.ts";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function Header() {
-    const [nickname, setNickname] = useState(null);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [nickname, setNickname] = useState<string | null>(null);
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const open = Boolean(anchorEl);
     const navigate = useNavigate();
 
-    const handleClick = (event) => {
+    const handleClick = (event: MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleClose = () => {
+    const handleClose = (): void => {
         setAnchorEl(null);
     };
 
-    const handleLogout = () => {
+    const handleLogout = (): void => {
         handleClose();
         onLogout();
     };
 
-    const onLogout = async () => {
-        const response = await api.post('/token/logout');
-        alert(response.data.data);
-        localStorage.removeItem('token');
-        navigate('/login');
+    const onLogout = async (): Promise<void> => {
+        try {
+            const response = await api.post('/token/logout');
+            alert(response.data.data);
+            localStorage.removeItem('token');
+            navigate('/login');
+        } catch (error) {
+            console.error('로그아웃 실패:', error);
+        }
     }
 
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
         try {
             const response = await api.get('/user/myInfo');
             setNickname(response.data.data.nickname);
-        } catch (error) {
-            if (error.response.status === 401 || error.response.status === 403) {
+        } catch (error: any) {
+            if (error.response?.status === 401 || error.response?.status === 403) {
                 console.log(error.response.status);
                 alert(error.response.data.data);
             }
@@ -44,8 +48,8 @@ export default function Header() {
     }
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        fetchData();
+    }, []);
 
     return (
         <Box className="header">
@@ -82,7 +86,7 @@ export default function Header() {
                     }}
                 >
                     <MenuItem onClick={handleLogout}>
-                        <CloseIcon/>
+                        <CloseIcon />
                         로그아웃
                     </MenuItem>
                 </Menu>

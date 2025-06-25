@@ -1,15 +1,21 @@
 import { Card, CardContent, CardMedia, Typography } from "@mui/material";
+import {JSX} from "react";
+import {Card as CardDto} from "./dto";
 
-export default function CardItem({ card }) {
+interface CardItemProps {
+    card: CardDto;
+}
+
+export default function CardItem({card}: CardItemProps): JSX.Element {
     return (
-        <Card sx={{borderRadius: 3 }}>
+        <Card sx={{borderRadius: 3}}>
             <CardMedia
                 component="img"
                 image={card.imageUrl}
                 alt={card.title}
                 height="350"
                 referrerPolicy="no-referrer"
-                sx={{ width: 245, objectFit: 'cover' }}
+                sx={{width: 245, objectFit: 'cover'}}
             />
             <CardContent>
                 <Typography variant="subtitle1" fontWeight="bold">{card.title}</Typography>
@@ -20,4 +26,4 @@ export default function CardItem({ card }) {
             </CardContent>
         </Card>
     );
-}
+};

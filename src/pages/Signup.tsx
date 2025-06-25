@@ -1,19 +1,26 @@
-import {useState, useEffect} from "react";
-import api from "../api/axios";
-import {useNavigate} from "react-router-dom";
-import {Box, Button, Paper, TextField, Typography} from "@mui/material";
+import {useState, useEffect, FormEvent, ChangeEvent, JSX} from "react";
+import api from "../common/axios";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+import {ApiError, ApiResponse} from "../common/ApiResponse.ts";
 
-function Signup() {
-    const [username, setUsername] = useState("");
-    const [nickname, setNickname] = useState("");
-    const [password, setPassword] = useState("");
-    const [passwordCheck, setPasswordCheck] = useState("");
-    const [usernameChecked, setUsernameChecked] = useState(false);
-    const [usernameMessage, setUsernameMessage] = useState("");
-    const [errors, setErrors] = useState([]);
+interface SignupFormData {
+    username: string;
+    nickname: string;
+    password: string;
+}
+
+export default function Signup() : JSX.Element {
+    const [username, setUsername] = useState<string>("");
+    const [nickname, setNickname] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [passwordCheck, setPasswordCheck] = useState<string>("");
+    const [usernameChecked, setUsernameChecked] = useState<boolean>(false);
+    const [usernameMessage, setUsernameMessage] = useState<string>("");
+    const [errors, setErrors] = useState<string[]>([]);
     const navigate = useNavigate();
 
-    const isFormValid =
+    const isFormValid: string | boolean =
         username &&
         nickname &&
         password &&
@@ -34,14 +41,16 @@ function Signup() {
                 return;
             }
 
-            const response = await api.get("/signup/checkUsername", {
+            const response = await api.get<ApiResponse<string>>("/signup/checkUsername", {
                 params: {username},
             });
+
             setUsernameMessage(response.data.data);
             setUsernameChecked(true);
         } catch (err) {
-            if (err.response) {
-                setUsernameMessage(err.response.data.data);
+            const error = err as ApiError;
+            if (error.response?.data) {
+                setUsernameMessage(error.response.data.data);
             } else {
                 setUsernameMessage("서버 오류가 발생했습니다.");
             }
@@ -49,21 +58,24 @@ function Signup() {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
         setErrors([]);
 
+        const signupData: SignupFormData = {
+            username,
+            nickname,
+            password,
+        };
+
         try {
-            const response = await api.post("/signup", {
-                username,
-                nickname,
-                password,
-            });
+            const response = await api.post("/signup", signupData);
             alert(response.data.data[0]);
             navigate("/login");
         } catch (err) {
-            if (err.response && err.response.data.data) {
-                setErrors(err.response.data.data);
+            const error = err as ApiError<string[]>;
+            if (error.response?.data?.data) {
+                setErrors(error.response.data.data);
             } else {
                 alert("알 수 없는 오류가 발생했습니다.");
             }
@@ -94,7 +106,7 @@ function Signup() {
                             label="아이디"
                             variant="outlined"
                             value={username}
-                            onChange={e => setUsername(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>)=> setUsername(e.target.value)}
                             sx={{width:424}}
                             autoFocus
                         />
@@ -116,7 +128,7 @@ function Signup() {
                             label="닉네임"
                             variant="outlined"
                             value={nickname}
-                            onChange={e => setNickname(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                             fullWidth
                             autoFocus
                         />
@@ -131,7 +143,7 @@ function Signup() {
                             type="password"
                             variant="outlined"
                             value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                             fullWidth
                             autoFocus
                         />
@@ -143,7 +155,7 @@ function Signup() {
                             type="password"
                             variant="outlined"
                             value={passwordCheck}
-                            onChange={e => setPasswordCheck(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setPasswordCheck(e.target.value)}
                             fullWidth
                             autoFocus
                         />
@@ -177,5 +189,3 @@ function Signup() {
         </Box>
     );
 }
-
-export default Signup;

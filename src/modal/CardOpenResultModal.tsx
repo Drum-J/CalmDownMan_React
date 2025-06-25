@@ -1,18 +1,35 @@
-import React from "react";
 import {
     Button,
     Card,
     CardContent,
     CardMedia,
-    Dialog, DialogActions,
+    Dialog,
+    DialogActions,
     DialogContent,
     DialogTitle,
-    Grid, IconButton,
+    Grid,
+    IconButton,
     Typography
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import {JSX} from "react";
 
-export default function CardResultModal({ open, onClose, cards }) {
+interface Card {
+    imageUrl: string;
+    title: string;
+    grade: string;
+    power: number;
+    attackType: string;
+    cardSeason: string;
+}
+
+interface CardResultModalProps {
+    open: boolean;
+    onClose: () => void;
+    cards: Card[];
+}
+
+export default function CardResultModal({ open, onClose, cards }: CardResultModalProps): JSX.Element {
     return (
         <Dialog open={open} onClose={onClose} maxWidth='lg'>
             <DialogTitle sx={{m: 0, p: 2, position: 'relative'}} align={'center'}>
@@ -33,7 +50,7 @@ export default function CardResultModal({ open, onClose, cards }) {
 
             <DialogContent>
                 <Grid container spacing={3} sx={{justifyContent: 'center'}}>
-                    {cards.map((card, index) => (
+                    {cards.map((card: Card, index: number) => (
                         <Grid key={index}>
                             <Card>
                                 <CardMedia

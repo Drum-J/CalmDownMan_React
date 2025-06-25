@@ -1,7 +1,13 @@
 import {Box, Button} from "@mui/material";
 import './Modal.css';
+import {JSX} from "react";
 
-export const AlertModal = ({ message, onClick }) => {
+interface AlertModalProps {
+    message: string;
+    onClick: () => void;
+}
+
+const AlertModal = ({ message, onClick }: AlertModalProps): JSX.Element => {
     return (
         <Box className="modal">
             <Box className="modal-content">
@@ -18,3 +24,5 @@ export const AlertModal = ({ message, onClick }) => {
         </Box>
     );
 };
+
+export default AlertModal;

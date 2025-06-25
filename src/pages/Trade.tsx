@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import {
     Container,
     Paper,
@@ -15,19 +14,41 @@ import {
     Select,
     MenuItem,
     Box,
-    Typography
+    Typography,
+    SelectChangeEvent
 } from '@mui/material';
-import api from '../api/axios';
+import api from '../common/axios';
+import { useNavigate } from "react-router-dom";
+
+interface Trade {
+    tradeId: number;
+    title: string;
+    grade: string;
+    cardCount: number;
+    tradeStatus: string;
+    nickname: string;
+}
+
+interface StatusOption {
+    value: string;
+    label: string;
+}
+
+interface GradeOption {
+    value: number;
+    label: string;
+}
 
 export default function Trade() {
-    const [trades, setTrades] = useState([]);
+    const [trades, setTrades] = useState<Trade[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [totalElements, setTotalElements] = useState(0);
-    const [status, setStatus] = useState('');
-    const [grade, setGrade] = useState('');
+    const [status, setStatus] = useState<string>('');
+    const [grade, setGrade] = useState<string>('');
+    const navigate = useNavigate();
 
-    const statusOptions = [
+    const statusOptions: StatusOption[] = [
         { value: 'ALL', label: '전체' },
         { value: 'WAITING', label: '대기' },
         { value: 'COMPLETED', label: '완료' },
@@ -35,7 +56,7 @@ export default function Trade() {
         { value: 'CANCEL', label: '취소' }
     ];
 
-    const gradeOptions = [
+    const gradeOptions: GradeOption[] = [
         { value: 100, label: '전체' },
         { value: 0, label: 'SSR' },
         { value: 1, label: 'SR' },
@@ -45,7 +66,7 @@ export default function Trade() {
         { value: 5, label: 'V' }
     ];
 
-    const fetchTrades = async () => {
+    const fetchTrades = async (): Promise<void> => {
         try {
             let url = `/trade/list?page=${page}&size=${rowsPerPage}`;
             if (status) url += `&status=${status}`;
@@ -63,19 +84,34 @@ export default function Trade() {
         fetchTrades();
     }, [page, rowsPerPage, status, grade]);
 
-    const handleChangePage = (event, newPage) => {
+    const handleChangePage = (_event: unknown, newPage: number): void => {
         setPage(newPage);
     };
 
-    const handleChangeRowsPerPage = (event) => {
+    const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>): void => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
 
-    const getStatusLabel = (status) => {
+    const handleStatusChange = (event: SelectChangeEvent): void => {
+        setStatus(event.target.value);
+    };
+
+    const handleGradeChange = (event: SelectChangeEvent): void => {
+        setGrade(event.target.value);
+    };
+
+    const getStatusLabel = (status: string): string => {
         const statusOption = statusOptions.find(option => option.value === status);
         return statusOption ? statusOption.label : status;
     };
+
+    const handleRowClick = (trade: Trade) => {
+        navigate(`/trade/${trade.tradeId}`, {
+            state: { tradeData: trade }
+        });
+    };
+
 
     return (
         <Container sx={{ mt: 4 }}>
@@ -89,8 +125,8 @@ export default function Trade() {
                     <Select
                         value={status}
                         label="상태"
-                        onChange={(e) => setStatus(e.target.value)}
-                        variant={"filled"}>
+                        onChange={handleStatusChange}
+                        variant="filled">
                         {statusOptions.map((option) => (
                             <MenuItem key={option.value} value={option.value}>
                                 {option.label}
@@ -104,8 +140,8 @@ export default function Trade() {
                     <Select
                         value={grade}
                         label="등급"
-                        onChange={(e) => setGrade(e.target.value)}
-                        variant={"filled"}>
+                        onChange={handleGradeChange}
+                        variant="filled">
                         {gradeOptions.map((option) => (
                             <MenuItem key={option.value} value={option.value}>
                                 {option.label}
@@ -119,23 +155,26 @@ export default function Trade() {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell align={"center"}>번호</TableCell>
+                            <TableCell align="center">번호</TableCell>
                             <TableCell>제목</TableCell>
-                            <TableCell align={"center"}>카드등급</TableCell>
-                            <TableCell align={"center"}>카드 개수</TableCell>
-                            <TableCell align={"center"}>상태</TableCell>
-                            <TableCell align={"center"}>작성자</TableCell>
+                            <TableCell align="center">카드등급</TableCell>
+                            <TableCell align="center">카드 개수</TableCell>
+                            <TableCell align="center">상태</TableCell>
+                            <TableCell align="center">작성자</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {trades.map((trade, index) => (
-                            <TableRow key={trade.tradeId}>
-                                <TableCell align={"center"}>{totalElements - index}</TableCell>
+                            <TableRow key={trade.tradeId}
+                                      onClick={() => handleRowClick(trade)}
+                                      sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+                            >
+                                <TableCell align="center">{totalElements - index}</TableCell>
                                 <TableCell>{trade.title}</TableCell>
-                                <TableCell align={"center"}>{trade.grade}</TableCell>
-                                <TableCell align={"center"}>{trade.cardCount}</TableCell>
-                                <TableCell align={"center"}>{getStatusLabel(trade.tradeStatus)}</TableCell>
-                                <TableCell align={"center"}>{trade.nickname}</TableCell>
+                                <TableCell align="center">{trade.grade}</TableCell>
+                                <TableCell align="center">{trade.cardCount}</TableCell>
+                                <TableCell align="center">{getStatusLabel(trade.tradeStatus)}</TableCell>
+                                <TableCell align="center">{trade.nickname}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

@@ -1,7 +1,14 @@
 import {Box, Button, Stack} from "@mui/material";
 import './Modal.css';
+import {JSX} from "react";
 
-const ConfirmModal = ({ message, onConfirm, onCancel }) => {
+interface ConfirmModalProps {
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const ConfirmModal = ({ message, onConfirm, onCancel }: ConfirmModalProps): JSX.Element => {
     return (
         <Box className="modal">
             <Box className="modal-content">

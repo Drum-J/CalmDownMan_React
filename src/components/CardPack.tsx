@@ -1,25 +1,31 @@
 import {Card, CardContent, CardMedia, Typography} from "@mui/material";
-import api from "../api/axios.jsx";
-import {useState} from "react";
-import ConfirmModal from "../modal/ConfirmModal.jsx";
-import CardOpenResultModal from "../modal/CardOpenResultModal.jsx";
+import api from "../common/axios.ts";
+import {JSX, useState} from "react";
+import ConfirmModal from "../modal/ConfirmModal";
+import CardOpenResultModal from "../modal/CardOpenResultModal";
+import {ApiResponse} from "../common/ApiResponse.ts";
 
-export default function CardPack({id, title, imageUrl}) {
-    const [open, setOpen] = useState(false);
-    const [openResult, setOpenResult] = useState(false); // 카드 결과 모달 상태
-    const [cards, setCards] = useState([]); // 카드 응답 데이터 저장
+interface CardPackProps {
+    id: number;
+    title: string;
+    imageUrl: string;
+}
 
-    const handleClick = () => {
+export default function CardPack({id, title, imageUrl}: CardPackProps): JSX.Element {
+    const [open, setOpen] = useState<boolean>(false);
+    const [openResult, setOpenResult] = useState<boolean>(false);
+    const [cards, setCards] = useState<Array<any>>([]);
+
+    const handleClick = (): void => {
         setOpen(true);
     }
 
-    const onConfirm = async () => {
-        try{
-            const response = await api.post(`/card/open/${id}`);
+    const onConfirm = async (): Promise<void> => {
+        try {
+            const response = await api.post<ApiResponse<string[]>>(`/card/open/${id}`);
             console.log(response.data.data);
             setCards(response.data.data);
             setOpenResult(true);
-
         } catch (error) {
             console.log(error);
         }
@@ -27,9 +33,10 @@ export default function CardPack({id, title, imageUrl}) {
         setOpen(false);
     }
 
+
     return (
         <>
-            <Card sx={{maxWidth: 300, m: 2}} onClick={() => handleClick()}>
+            <Card sx={{maxWidth: 300, m: 2}} onClick={handleClick}>
                 <CardMedia
                     component="img"
                     height="400"
@@ -43,7 +50,7 @@ export default function CardPack({id, title, imageUrl}) {
 
             {open && <ConfirmModal
                 message={`${title}(을)를 오픈할까요?`}
-                onConfirm={() => onConfirm()}
+                onConfirm={onConfirm}
                 onCancel={() => setOpen(false)}
             />}
 
@@ -56,4 +63,5 @@ export default function CardPack({id, title, imageUrl}) {
             )}
         </>
     );
+
 }
