@@ -1,12 +1,13 @@
 import './Header.css';
 import {Box, Menu, MenuItem, Stack, Typography} from "@mui/material";
 import {Link, useNavigate} from "react-router-dom";
-import {useEffect, useState, MouseEvent} from "react";
-import api from "../common/axios.ts";
+import {useState, MouseEvent} from "react";
+import api from "../common/axios";
 import CloseIcon from "@mui/icons-material/Close";
+import {useUser} from "../common/UserContext";
 
 export default function Header() {
-    const [nickname, setNickname] = useState<string | null>(null);
+    const { userInfo } = useUser();
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const open = Boolean(anchorEl);
     const navigate = useNavigate();
@@ -35,22 +36,6 @@ export default function Header() {
         }
     }
 
-    const fetchData = async (): Promise<void> => {
-        try {
-            const response = await api.get('/user/myInfo');
-            setNickname(response.data.data.nickname);
-        } catch (error: any) {
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                console.log(error.response.status);
-                alert(error.response.data.data);
-            }
-        }
-    }
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     return (
         <Box className="header">
             <Typography className="title" variant="h4" align="center">
@@ -69,7 +54,7 @@ export default function Header() {
                 </Box>
 
                 <Box className="nickname" onClick={handleClick} sx={{ cursor: 'pointer' }}>
-                    {nickname}님
+                    {userInfo?.nickname}님
                 </Box>
 
                 <Menu

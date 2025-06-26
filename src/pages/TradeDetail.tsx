@@ -11,19 +11,21 @@ import {
     Button
 } from '@mui/material';
 import api from '../common/axios';
-import {ApiResponse} from "../common/ApiResponse.ts";
+import {ApiResponse} from "../common/ApiResponse";
 import {TradeCardDetail, StatusOption, Trade} from '../components/trade/dto';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import {useUser} from "../common/UserContext";
 
 
 export default function TradeDetail() {
+    const { userInfo } = useUser();
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
     const navigate = useNavigate();
     const tradeData = location.state?.tradeData as Trade;
     const listState = location.state?.listState;
     const [tradeCards, setTradeCards] = useState<TradeCardDetail[]>([]);
-
+    const [owner, setOwner] = useState<boolean>(false);
 
     const statusOptions: StatusOption[] = [
         { value: 'ALL', label: '전체' },
@@ -52,6 +54,10 @@ export default function TradeDetail() {
         if (id) {
             fetchTradeCards();
         }
+
+        if (userInfo !== null) {
+            userInfo.id === tradeData.accountId ? setOwner(true) : setOwner(false);
+        }
     }, [id]);
 
     if (!tradeData) {
@@ -63,7 +69,6 @@ export default function TradeDetail() {
             state: listState
         });
     };
-
 
     return (
         <Box sx={{ mt: 4 }}>
@@ -123,8 +128,15 @@ export default function TradeDetail() {
                 >
                     목록으로 돌아가기
                 </Button>
+
+                {owner && (<Typography>내가 이 글의 주인이다!</Typography>)}
+            </Paper>
+
+            <Paper sx={{ p: 3}}>
+                <Typography variant="h4">
+                    교환 신청 목록
+                </Typography>
             </Paper>
         </Box>
-
     );
 }
