@@ -2,7 +2,7 @@ import {FormEvent, JSX, useState} from "react";
 import api from "../common/axios";
 import {Link, useNavigate} from "react-router-dom";
 import {Box, Button, Paper, TextField, Typography} from "@mui/material";
-import {ApiError, ApiResponse} from "../common/ApiResponse.ts";
+import {ApiError, ApiResponse} from "../common/ApiResponse";
 
 export default function Login(): JSX.Element {
     const [username, setUsername] = useState<string>("");

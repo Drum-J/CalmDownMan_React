@@ -1,5 +1,5 @@
 import Header from './Header.js';
-import {WithChildren} from "../common/WithChildren.ts";
+import {WithChildren} from "../common/WithChildren";
 
 export default function Layout({ children } : WithChildren) {
     return (

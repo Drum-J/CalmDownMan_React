@@ -1,9 +1,9 @@
 import {Card, CardContent, CardMedia, Typography} from "@mui/material";
-import api from "../common/axios.ts";
+import api from "../common/axios";
 import {JSX, useState} from "react";
 import ConfirmModal from "../modal/ConfirmModal";
 import CardOpenResultModal from "../modal/CardOpenResultModal";
-import {ApiResponse} from "../common/ApiResponse.ts";
+import {ApiResponse} from "../common/ApiResponse";
 
 interface CardPackProps {
     id: number;

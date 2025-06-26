@@ -2,7 +2,7 @@ import {useState, useEffect, FormEvent, ChangeEvent, JSX} from "react";
 import api from "../common/axios";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
-import {ApiError, ApiResponse} from "../common/ApiResponse.ts";
+import {ApiError, ApiResponse} from "../common/ApiResponse";
 
 interface SignupFormData {
     username: string;

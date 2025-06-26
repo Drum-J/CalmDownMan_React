@@ -2,7 +2,7 @@ import {JSX, useEffect, useState } from 'react';
 import { Box, Grid } from "@mui/material";
 import api from "../common/axios";
 import CardPack from "../components/CardPack";
-import { ApiResponse } from "../common/ApiResponse.ts";
+import { ApiResponse } from "../common/ApiResponse";
 
 interface CardPack {
     id: number;

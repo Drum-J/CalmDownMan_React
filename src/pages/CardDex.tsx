@@ -3,7 +3,7 @@ import api from "../common/axios";
 import { Container, Typography } from "@mui/material";
 import SeasonSelect from "../components/card/SeasonSelect";
 import CardGrid from "../components/card/CardGrid";
-import {ApiResponse} from "../common/ApiResponse.ts";
+import {ApiResponse} from "../common/ApiResponse";
 import {Card, Season} from "../components/card/dto";
 
 export default function CardDex(): JSX.Element {
