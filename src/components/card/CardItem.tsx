@@ -17,7 +17,7 @@ export default function CardItem({card}: CardItemProps): JSX.Element {
                 referrerPolicy="no-referrer"
                 sx={{width: 245, objectFit: 'cover'}}
             />
-            <CardContent>
+            <CardContent sx={{ backgroundColor:'#282831' }}>
                 <Typography variant="subtitle1" fontWeight="bold">{card.title}</Typography>
                 <Typography variant="body2">등급: {card.grade}</Typography>
                 <Typography variant="body2">파워: {card.power}</Typography>

@@ -18,11 +18,11 @@ import {
 } from '@mui/material';
 import api from '../common/axios';
 import {useLocation, useNavigate} from "react-router-dom";
-import { Trade as Trades, StatusOption, GradeOption } from '../components/trade/dto';
+import { Trade as Trades, StatusOption, GradeOption, ListState } from '../components/trade/dto';
 
 export default function Trade() {
     const location = useLocation();
-    const listState = location.state;
+    const listState = location.state?.listState as ListState;
 
     const [trades, setTrades] = useState<Trades[]>([]);
     const [page, setPage] = useState(listState?.page || 0);

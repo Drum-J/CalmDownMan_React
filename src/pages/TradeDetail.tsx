@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import api from '../common/axios';
 import {ApiResponse} from "../common/ApiResponse";
-import {TradeCardDetail, StatusOption, Trade} from '../components/trade/dto';
+import {TradeCardDetail, StatusOption, Trade, ListState} from '../components/trade/dto';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {useUser} from "../common/UserContext";
 
@@ -23,7 +23,7 @@ export default function TradeDetail() {
     const location = useLocation();
     const navigate = useNavigate();
     const tradeData = location.state?.tradeData as Trade;
-    const listState = location.state?.listState;
+    const listState = location.state?.listState as ListState;
     const [tradeCards, setTradeCards] = useState<TradeCardDetail[]>([]);
     const [owner, setOwner] = useState<boolean>(false);
 
@@ -66,9 +66,21 @@ export default function TradeDetail() {
 
     const handleBack = () => {
         navigate('/trade', {
-            state: listState
+            state: {
+                listState: listState
+            }
         });
     };
+
+    const handleTradeRequest = () => {
+        navigate('/selectCards', {
+            state: {
+                purpose: 'tradeRequest',
+                trade: tradeData,
+                listState: listState
+            }
+        });
+    }
 
     return (
         <Box sx={{ mt: 4 }}>
@@ -82,6 +94,14 @@ export default function TradeDetail() {
                         label={getStatusLabel(tradeData.tradeStatus)}
                         color={tradeData.tradeStatus === 'WAITING' ? 'primary' : 'secondary'}
                     />
+
+                    {owner && tradeData.tradeStatus === 'WAITING' &&
+                        <Chip
+                            label={'교환 취소하기'}
+                            color={'error'}
+                            sx={{cursor: 'pointer', ml: 2, '&:hover': {backgroundColor: 'rgba(246, 104, 94, 1)'}}}
+                        />
+                    }
                 </Box>
 
                 <Typography align={'right'} variant="subtitle1" color="text.secondary" sx={{ mb: 2}}>
@@ -105,7 +125,7 @@ export default function TradeDetail() {
                                     referrerPolicy="no-referrer"
                                     sx={{width: 245, objectFit: 'cover'}}
                                 />
-                                <CardContent>
+                                <CardContent sx={{ backgroundColor:'#282831' }}>
                                     <Typography gutterBottom variant="h6">
                                         {card.title}
                                     </Typography>
@@ -128,14 +148,24 @@ export default function TradeDetail() {
                 >
                     목록으로 돌아가기
                 </Button>
-
-                {owner && (<Typography>내가 이 글의 주인이다!</Typography>)}
             </Paper>
 
-            <Paper sx={{ p: 3}}>
+            <Paper sx={{ p: 3 }}>
                 <Typography variant="h4">
                     교환 신청 목록
                 </Typography>
+
+                {!owner && tradeData.tradeStatus === 'WAITING' &&
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="medium"
+                        sx={{mt:2}}
+                        onClick={handleTradeRequest}
+                    >
+                        교환 신청하기
+                    </Button>
+                }
             </Paper>
         </Box>
     );

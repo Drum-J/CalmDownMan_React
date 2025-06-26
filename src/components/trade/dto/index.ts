@@ -28,3 +28,10 @@ export interface TradeCardDetail {
     count: number;
     imageUrl: string;
 }
+
+export interface ListState {
+    page: number;
+    status: string;
+    grade: string;
+    rowsPerPage: number;
+}

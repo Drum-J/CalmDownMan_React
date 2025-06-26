@@ -9,6 +9,7 @@ import CardDex from "./pages/CardDex";
 import Trade from "./pages/Trade";
 import TradeDetail from "./pages/TradeDetail";
 import {JSX} from "react";
+import SelectCardPage from "./pages/SelectCardPage";
 
 function App(): JSX.Element {
     return (
@@ -25,6 +26,7 @@ function App(): JSX.Element {
                                 <Route path="/cardDex" element={<CardDex/>}/>
                                 <Route path="/trade" element={<Trade/>}/>
                                 <Route path="/trade/:id" element={<TradeDetail />} />
+                                <Route path="/selectCards" element={<SelectCardPage />} />
                             </Routes>
                         </Layout>
                     </RequireAuth>
