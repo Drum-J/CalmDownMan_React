@@ -1,6 +1,5 @@
 import { useState, useEffect, ChangeEvent } from 'react';
 import {
-    Container,
     Paper,
     Table,
     TableBody,
@@ -15,37 +14,22 @@ import {
     MenuItem,
     Box,
     Typography,
-    SelectChangeEvent
+    SelectChangeEvent, Chip
 } from '@mui/material';
 import api from '../common/axios';
-import { useNavigate } from "react-router-dom";
-
-interface Trade {
-    tradeId: number;
-    title: string;
-    grade: string;
-    cardCount: number;
-    tradeStatus: string;
-    nickname: string;
-}
-
-interface StatusOption {
-    value: string;
-    label: string;
-}
-
-interface GradeOption {
-    value: number;
-    label: string;
-}
+import {useLocation, useNavigate} from "react-router-dom";
+import { Trade as Trades, StatusOption, GradeOption } from '../components/trade/dto';
 
 export default function Trade() {
-    const [trades, setTrades] = useState<Trade[]>([]);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const location = useLocation();
+    const listState = location.state;
+
+    const [trades, setTrades] = useState<Trades[]>([]);
+    const [page, setPage] = useState(listState?.page || 0);
+    const [rowsPerPage, setRowsPerPage] = useState(listState?.rowsPerPage || 5);
+    const [status, setStatus] = useState<string>(listState?.status || '');
+    const [grade, setGrade] = useState<string>(listState?.grade || '');
     const [totalElements, setTotalElements] = useState(0);
-    const [status, setStatus] = useState<string>('');
-    const [grade, setGrade] = useState<string>('');
     const navigate = useNavigate();
 
     const statusOptions: StatusOption[] = [
@@ -106,15 +90,24 @@ export default function Trade() {
         return statusOption ? statusOption.label : status;
     };
 
-    const handleRowClick = (trade: Trade) => {
+    const handleRowClick = (trade: Trades) => {
         navigate(`/trade/${trade.tradeId}`, {
-            state: { tradeData: trade }
+            state: {
+                tradeData: trade,
+                listState: {
+                    page,
+                    status,
+                    grade,
+                    rowsPerPage
+                }
+            }
+
         });
     };
 
 
     return (
-        <Container sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4 }}>
             <Typography variant="h4" gutterBottom>
                 카드 교환
             </Typography>
@@ -173,7 +166,12 @@ export default function Trade() {
                                 <TableCell>{trade.title}</TableCell>
                                 <TableCell align="center">{trade.grade}</TableCell>
                                 <TableCell align="center">{trade.cardCount}</TableCell>
-                                <TableCell align="center">{getStatusLabel(trade.tradeStatus)}</TableCell>
+                                <TableCell align="center">
+                                    <Chip
+                                        label={getStatusLabel(trade.tradeStatus)}
+                                        color={trade.tradeStatus === 'WAITING' ? 'primary' : 'secondary'}
+                                    />
+                                </TableCell>
                                 <TableCell align="center">{trade.nickname}</TableCell>
                             </TableRow>
                         ))}
@@ -191,6 +189,6 @@ export default function Trade() {
                 rowsPerPageOptions={[5, 10, 25]}
                 labelRowsPerPage="페이지당 행 수"
             />
-        </Container>
+        </Box>
     );
 }

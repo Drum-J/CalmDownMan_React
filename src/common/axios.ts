@@ -1,5 +1,5 @@
 import axios, {AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse} from 'axios';
-import {ApiResponse} from "./ApiResponse.ts";
+import {ApiResponse} from "./ApiResponse";
 
 // CustomAxiosError 타입도 이에 맞게 수정
 interface CustomAxiosError extends AxiosError {
@@ -60,6 +60,7 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 // 리프레시 토큰도 만료되었거나 유효하지 않은 경우
+                alert("세션이 만료되었습니다. 다시 로그인 해주세요.")
                 localStorage.removeItem('token');
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
