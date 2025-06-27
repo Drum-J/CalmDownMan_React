@@ -20,7 +20,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import api from '../common/axios';
 import { ApiResponse } from "../common/ApiResponse";
-import {ListState, Trade} from "../components/trade/dto";
+import { ListState, Trade, TradeCardDetail } from "../components/trade/dto";
 
 // API 응답에 대한 DTO
 interface MyCardDetailDto {
@@ -31,7 +31,7 @@ interface MyCardDetailDto {
     power: number;
     imageUrl: string;
     cardSeason: string;
-    count: number; // 보유 수량
+    count: number;
 }
 
 // 선택된 카드의 수량을 저장하기 위한 타입
@@ -46,6 +46,8 @@ interface LocationState {
     purpose: PagePurpose;
     trade?: Trade;
     listState?: ListState;
+    title?: string;
+    content?: string;
 }
 
 export default function SelectCardPage() {
@@ -73,7 +75,7 @@ export default function SelectCardPage() {
     });
 
     const pageTexts = {
-        'tradePost': { title: '교환에 등록할 카드 선택', submitButton: '다음 (글 작성하기)' },
+        'tradePost': { title: '교환에 등록할 카드 선택', submitButton: '선택 완료' },
         'tradeRequest': { title: '교환 신청할 카드 선택', submitButton: '교환 신청하기' },
         'gameReady': { title: '게임에 사용할 카드 선택', submitButton: '선택 완료' }
     };
@@ -139,36 +141,61 @@ export default function SelectCardPage() {
     };
 
     const handleSubmit = async () => {
-        setIsSubmitting(true); // API 호출 시작 시 버튼 비활성화
-
+        setIsSubmitting(true);
         try {
             // 교환 신청 로직
             if (purpose === 'tradeRequest') {
-                const selectedCardIds: number[] = [];
-                for (const cardId in selectedCards) {
-                    const quantity = selectedCards[cardId];
-                    if (quantity > 0) {
-                        for (let i = 0; i < quantity; i++) {
-                            selectedCardIds.push(Number(cardId));
-                        }
-                    }
+                const selectedCardIds: number[] = Object.entries(selectedCards)
+                    .flatMap(([cardId, quantity]) => Array(quantity).fill(Number(cardId)));
+
+                if (selectedCardIds.length === 0) {
+                    alert("카드를 선택해주세요.");
+                    setIsSubmitting(false);
+                    return;
                 }
 
                 // 백엔드 API 호출
                 const response = await api.post<ApiResponse<string>>(
                     `/trade/request/${trade.tradeId}`,
-                    { cardIds: selectedCardIds }  // DTO에 맞게 데이터 전송
+                    { cardIds: selectedCardIds }
                 );
 
                 // 성공 시 서버의 응답 메시지를 alert으로 표시
                 alert(response.data.data);
                 navigate(`/trade/${trade.tradeId}`, {
+                    state: { tradeData: trade, listState: listState }
+                });
+                return;
+            }
+
+            if (purpose === 'tradePost') {
+                const selectedCardsForTradePost: TradeCardDetail[] = [];
+                for (const cardIdStr in selectedCards) {
+                    const cardId = Number(cardIdStr);
+                    const quantity = selectedCards[cardId];
+                    if (quantity > 0) {
+                        const cardInfo = myCards.find(c => c.id === cardId);
+                        if (cardInfo) {
+                            for (let i = 0; i < quantity; i++) {
+                                selectedCardsForTradePost.push({
+                                    cardId: cardInfo.id,
+                                    title: cardInfo.title,
+                                    grade: cardInfo.grade,
+                                    count: 1, // 각 아이템은 개별 카드 1장을 의미
+                                    imageUrl: cardInfo.imageUrl,
+                                });
+                            }
+                        }
+                    }
+                }
+                navigate('/trade/create', {
                     state: {
-                        tradeData: trade,
-                        listState: listState
+                        selectedCards: selectedCardsForTradePost,
+                        title: state.title,
+                        content: state.content
                     }
                 });
-                return; // 교환 신청 로직은 여기서 종료
+                return;
             }
 
             // 교환 등록 및 게임 준비 로직 (이 부분은 기존과 동일합니다)
@@ -186,9 +213,7 @@ export default function SelectCardPage() {
                 }
             }
 
-            if (purpose === 'tradePost') {
-                navigate('/trade/new', { state: { selectedCards: selectedCardsDetails } });
-            } else if (purpose === 'gameReady') {
+            if (purpose === 'gameReady') {
                 navigate('/game/lobby', { state: { selectedCards: selectedCardsDetails } });
             }
 
@@ -196,7 +221,7 @@ export default function SelectCardPage() {
             console.error('요청 처리 중 오류가 발생했습니다:', error);
             alert('요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
         } finally {
-            setIsSubmitting(false); // API 호출 종료 시 버튼 다시 활성화
+            setIsSubmitting(false);
         }
     };
 
@@ -288,10 +313,11 @@ export default function SelectCardPage() {
             <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, textAlign: 'center', zIndex: 1100, borderTop: '1px solid #444' }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>총 선택된 카드: {totalSelectedCount}장</Typography>
                 <Button
-                    variant="contained"
+                    variant="outlined"
                     color="secondary"
                     size="large"
-                    onClick={() => window.history.back()}
+                    onClick={() => navigate(-1)}
+                    sx={{mr: 2}}
                 >
                     취소
                 </Button>

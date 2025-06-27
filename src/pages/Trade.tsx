@@ -3,7 +3,8 @@ import {
     TablePagination,
     Box,
     Typography,
-    SelectChangeEvent
+    SelectChangeEvent,
+    Button
 } from '@mui/material';
 import api from '../common/axios';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -73,11 +74,20 @@ export default function Trade() {
         });
     };
 
+    const handleCreateClick = () => {
+        navigate('/trade/create');
+    };
+
     return (
         <Box sx={{ mt: 4 }}>
-            <Typography variant="h4" gutterBottom>
-                카드 교환
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h4" gutterBottom component="div">
+                    카드 교환
+                </Typography>
+                <Button variant="contained" onClick={handleCreateClick}>
+                    교환글 등록
+                </Button>
+            </Box>
 
             <TradeFilter
                 status={status}
