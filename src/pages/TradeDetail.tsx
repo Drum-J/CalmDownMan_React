@@ -4,18 +4,17 @@ import {
     Paper,
     Typography,
     Box,
-    Card,
-    CardMedia,
-    CardContent,
-    Chip, Grid,
     Button
 } from '@mui/material';
 import api from '../common/axios';
 import {ApiResponse} from "../common/ApiResponse";
-import {TradeCardDetail, StatusOption, Trade, ListState} from '../components/trade/dto';
+import {TradeCardDetail, Trade, ListState} from '../components/trade/dto';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {useUser} from "../common/UserContext";
-
+import TradeDetailHeader from '../components/trade/modules/TradeDetailHeader';
+import TradeCardGrid from '../components/trade/modules/TradeCardGrid';
+import ConfirmModal from "../modal/ConfirmModal";
+import AlertModal from "../modal/AlertModal";
 
 export default function TradeDetail() {
     const { userInfo } = useUser();
@@ -26,19 +25,9 @@ export default function TradeDetail() {
     const listState = location.state?.listState as ListState;
     const [tradeCards, setTradeCards] = useState<TradeCardDetail[]>([]);
     const [owner, setOwner] = useState<boolean>(false);
-
-    const statusOptions: StatusOption[] = [
-        { value: 'ALL', label: '전체' },
-        { value: 'WAITING', label: '대기' },
-        { value: 'COMPLETED', label: '완료' },
-        { value: 'REJECTED', label: '거절' },
-        { value: 'CANCEL', label: '취소' }
-    ];
-
-    const getStatusLabel = (status: string): string => {
-        const statusOption = statusOptions.find(option => option.value === status);
-        return statusOption ? statusOption.label : status;
-    };
+    const [cancel, setCancel] = useState<boolean>(false); // 교환 취소 컨펌 모달
+    const [open, setOpen] = useState<boolean>(false); // alert 모달
+    const [message, setMessage] = useState<string>('');
 
     useEffect(() => {
         const fetchTradeCards = async () => {
@@ -55,10 +44,10 @@ export default function TradeDetail() {
             fetchTradeCards();
         }
 
-        if (userInfo !== null) {
-            userInfo.id === tradeData.accountId ? setOwner(true) : setOwner(false);
+        if (userInfo !== null && tradeData) {
+            setOwner(userInfo.id === tradeData.accountId);
         }
-    }, [id]);
+    }, [id, userInfo, tradeData]);
 
     if (!tradeData) {
         return <div>로딩 중...</div>;
@@ -82,27 +71,35 @@ export default function TradeDetail() {
         });
     }
 
+    const handleCancelTrade = () => {
+        setCancel(true);
+    };
+
+    const cancelConfirm = async () => {
+        const response = await api.post(`/trade/post/cancel/${tradeData.tradeId}`);
+        setCancel(false); // confirm 닫기
+        setMessage(response.data.data); // alert 모달에 보여줄 메세지
+        setOpen(true); // alert 모달 열기
+    }
+
+    const onCancel = () => {
+        setCancel(false);
+    }
+
+    const alertConfirm = () => {
+        setOpen(false);
+        navigate('/trade', {state: {listState: listState}});
+    }
+
     return (
         <Box sx={{ mt: 4 }}>
             <Paper sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Typography variant="h4">
-                        {tradeData.title}
-                    </Typography>
-                    <Chip
-                        sx={{ ml: 2 }}
-                        label={getStatusLabel(tradeData.tradeStatus)}
-                        color={tradeData.tradeStatus === 'WAITING' ? 'primary' : 'secondary'}
-                    />
-
-                    {owner && tradeData.tradeStatus === 'WAITING' &&
-                        <Chip
-                            label={'교환 취소하기'}
-                            color={'error'}
-                            sx={{cursor: 'pointer', ml: 2, '&:hover': {backgroundColor: 'rgba(246, 104, 94, 1)'}}}
-                        />
-                    }
-                </Box>
+                <TradeDetailHeader
+                    title={tradeData.title}
+                    tradeStatus={tradeData.tradeStatus}
+                    isOwner={owner}
+                    onCancel={handleCancelTrade}
+                />
 
                 <Typography align={'right'} variant="subtitle1" color="text.secondary" sx={{ mb: 2}}>
                     작성자: {tradeData.nickname}
@@ -113,33 +110,7 @@ export default function TradeDetail() {
                 </Typography>
 
                 <Typography variant="h6" sx={{ mb: 2 }}>⭐교환 등록 카드⭐</Typography>
-                <Grid container justifyContent={'center'} spacing={2}>
-                    {tradeCards.map((card) => (
-                        <Grid key={card.cardId}>
-                            <Card sx={{borderRadius: 3}}>
-                                <CardMedia
-                                    component="img"
-                                    image={card.imageUrl}
-                                    alt={card.title}
-                                    height="350"
-                                    referrerPolicy="no-referrer"
-                                    sx={{width: 245, objectFit: 'cover'}}
-                                />
-                                <CardContent sx={{ backgroundColor:'#282831' }}>
-                                    <Typography gutterBottom variant="h6">
-                                        {card.title}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        등급: {card.grade}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        수량: {card.count}개
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
+                <TradeCardGrid cards={tradeCards} />
 
                 <Button
                     startIcon={<ArrowBackIcon />}
@@ -167,6 +138,17 @@ export default function TradeDetail() {
                     </Button>
                 }
             </Paper>
+
+            {cancel && <ConfirmModal
+                message={'교환글을 취소할까요?'}
+                onCancel={onCancel}
+                onConfirm={cancelConfirm}
+            />}
+
+            {open && <AlertModal
+                message={message}
+                onClick={alertConfirm}
+            />}
         </Box>
     );
 }
