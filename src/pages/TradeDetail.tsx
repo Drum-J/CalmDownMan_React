@@ -77,10 +77,16 @@ export default function TradeDetail() {
     };
 
     const cancelConfirm = async () => {
-        const response = await api.post(`/trade/post/cancel/${tradeData.tradeId}`);
-        setCancel(false); // confirm 닫기
-        setMessage(response.data.data); // alert 모달에 보여줄 메세지
-        setOpen(true); // alert 모달 열기
+        try {
+            const response = await api.post(`/trade/post/cancel/${tradeData.tradeId}`);
+            setCancel(false); // confirm 닫기
+            setMessage(response.data.data); // alert 모달에 보여줄 메세지
+            setOpen(true); // alert 모달 열기
+        } catch (error) {
+            setCancel(false); // confirm 닫기
+            setMessage(error.response.data.data); // alert 모달에 보여줄 메세지
+            setOpen(true); // alert 모달 열기
+        }
     }
 
     const onCancel = () => {
@@ -126,7 +132,7 @@ export default function TradeDetail() {
                 <Typography variant="h4">
                     교환 신청 목록
                 </Typography>
-                {id && <TradeRequestList tradeId={id} />}
+                {id && <TradeRequestList tradeId={id} isOwner={owner} isWaiting={tradeData.tradeStatus === 'WAITING'} />}
                 {!owner && tradeData.tradeStatus === 'WAITING' &&
                     <Button
                         variant="contained"

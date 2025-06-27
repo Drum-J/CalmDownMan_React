@@ -177,7 +177,8 @@ export default function Signup() : JSX.Element {
 
                         <Button
                             type="button"
-                            variant="contained"
+                            variant="outlined"
+                            color="secondary"
                             sx={{width: 130, height:56, marginLeft:3}}
                             onClick={() => navigate("/login")}
                         >

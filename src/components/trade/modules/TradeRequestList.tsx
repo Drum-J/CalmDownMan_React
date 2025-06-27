@@ -19,9 +19,11 @@ import TradeRequestDetailModal from './TradeRequestDetailModal';
 
 interface TradeRequestListProps {
     tradeId: string;
+    isOwner: boolean;
+    isWaiting: boolean;
 }
 
-export default function TradeRequestList({ tradeId }: TradeRequestListProps) {
+export default function TradeRequestList({ tradeId, isOwner, isWaiting }: TradeRequestListProps) {
     const [requests, setRequests] = useState<TradeRequestListDto[]>([]);
     const [selectedRequest, setSelectedRequest] = useState<TradeRequestListDto | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,6 +100,8 @@ export default function TradeRequestList({ tradeId }: TradeRequestListProps) {
                 requestData={selectedRequest}
                 tradeId={tradeId}
                 onSuccess={handleSuccess}
+                isOwner={isOwner}
+                isWaiting={isWaiting}
             />
         </Box>
     );
