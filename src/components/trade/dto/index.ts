@@ -35,3 +35,13 @@ export interface ListState {
     grade: string;
     rowsPerPage: number;
 }
+
+export interface TradeRequestListDto {
+    id: number;
+    requesterId: number;
+    username: string;
+    nickname: string;
+    profileImage: string | null;
+    tradeStatus: string;
+    cardCount: number;
+}

@@ -15,6 +15,7 @@ import TradeDetailHeader from '../components/trade/modules/TradeDetailHeader';
 import TradeCardGrid from '../components/trade/modules/TradeCardGrid';
 import ConfirmModal from "../modal/ConfirmModal";
 import AlertModal from "../modal/AlertModal";
+import TradeRequestList from "../components/trade/modules/TradeRequestList";
 
 export default function TradeDetail() {
     const { userInfo } = useUser();
@@ -125,7 +126,7 @@ export default function TradeDetail() {
                 <Typography variant="h4">
                     교환 신청 목록
                 </Typography>
-
+                {id && <TradeRequestList tradeId={id} />}
                 {!owner && tradeData.tradeStatus === 'WAITING' &&
                     <Button
                         variant="contained"
