@@ -1,8 +1,9 @@
 import {useState, useEffect, FormEvent, ChangeEvent, JSX} from "react";
 import api from "../common/axios";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, Paper, TextField, Typography } from "@mui/material";
 import {ApiError, ApiResponse} from "../common/ApiResponse";
+import {Visibility, VisibilityOff} from "@mui/icons-material";
 
 interface SignupFormData {
     username: string;
@@ -18,6 +19,7 @@ export default function Signup() : JSX.Element {
     const [usernameChecked, setUsernameChecked] = useState<boolean>(false);
     const [usernameMessage, setUsernameMessage] = useState<string>("");
     const [errors, setErrors] = useState<string[]>([]);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const isFormValid: string | boolean =
@@ -82,6 +84,28 @@ export default function Signup() : JSX.Element {
         }
     };
 
+    // 비밀번호 보이기/숨기기 Adornment
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
+
+    const passwordVisibilityAdornment = {
+        endAdornment: (
+            <InputAdornment position="end">
+                <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                    color="secondary"
+                >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+            </InputAdornment>
+        ),
+    };
+
     return (
         <Box
             sx={{
@@ -140,19 +164,20 @@ export default function Signup() : JSX.Element {
                     <Box>
                         <TextField
                             label="비밀번호"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             variant="outlined"
                             value={password}
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                             fullWidth
                             autoFocus
+                            slotProps={{input: passwordVisibilityAdornment}}
                         />
                     </Box>
 
                     <Box>
                         <TextField
                             label="비밀번호 확인"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             variant="outlined"
                             value={passwordCheck}
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setPasswordCheck(e.target.value)}

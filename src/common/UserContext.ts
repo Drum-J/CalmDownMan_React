@@ -1,7 +1,7 @@
 
 import { createContext, useContext } from 'react';
 
-interface UserInfo {
+export interface UserInfo {
     id: number;
     username: string;
     nickname: string;
