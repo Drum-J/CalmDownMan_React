@@ -1,4 +1,5 @@
 import './App.css'
+import {JSX} from "react";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -8,9 +9,13 @@ import RequireAuth from "./components/RequireAuth";
 import CardDex from "./pages/CardDex";
 import Trade from "./pages/Trade";
 import TradeDetail from "./pages/TradeDetail";
-import {JSX} from "react";
 import SelectCardPage from "./pages/SelectCardPage";
 import TradePostCreate from "./pages/TradePostCreate";
+import MyPage from "./pages/mypage/MyPage";
+import MyRequests from "./pages/mypage/MyRequests";
+import MyInfo from "./pages/mypage/MyInfo";
+import MyPosts from "./pages/mypage/MyPosts";
+import MyCards from "./pages/mypage/MyCards";
 
 function App(): JSX.Element {
     return (
@@ -29,6 +34,14 @@ function App(): JSX.Element {
                                 <Route path="/trade/:id" element={<TradeDetail />} />
                                 <Route path="/selectCards" element={<SelectCardPage />} />
                                 <Route path="/trade/create" element={<TradePostCreate />} />
+
+                                {/* 마이페이지 라우트 설정 */}
+                                <Route path="/mypage" element={<MyPage />}>
+                                    <Route index element={<MyInfo />} />
+                                    <Route path="cards" element={<MyCards />} />
+                                    <Route path="posts" element={<MyPosts />} />
+                                    <Route path="applications" element={<MyRequests />} />
+                                </Route>
                             </Routes>
                         </Layout>
                     </RequireAuth>

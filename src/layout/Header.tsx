@@ -49,7 +49,7 @@ export default function Header() {
                         <Link to="/cardDex">도감</Link>
                         <Link to="/">게임</Link>
                         <Link to="/trade">교환</Link>
-                        <Link to="/">마이페이지</Link>
+                        <Link to="/mypage">마이페이지</Link>
                     </Stack>
                 </Box>
 

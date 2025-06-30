@@ -1,0 +1,14 @@
+.mypage-container {
+    display: flex;
+    margin-top: 2rem;
+    gap: 2rem;
+}
+
+.mypage-menu {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.mypage-content {
+    flex-grow: 1;
+}
