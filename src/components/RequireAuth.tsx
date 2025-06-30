@@ -10,6 +10,7 @@ export default function RequireAuth({children}: WithChildren): JSX.Element {
         id: number;
         username: string;
         nickname: string;
+        profileImage: string;
     } | null>(null);
 
     useEffect(() => {
