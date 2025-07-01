@@ -6,7 +6,7 @@ import CardGrid from "../components/card/CardGrid";
 import {ApiResponse} from "../common/ApiResponse";
 import {Card, Season} from "../components/card/dto";
 
-const ATTACK_TYPES = ["TOTAL", "ALL", "ROCK", "SCISSORS", "PAPER"];
+const ATTACK_TYPES = ["TOTAL", "ALL", "바위", "가위", "보"];
 const GRADES = ["ALL", "SSR", "SR", "R", "N", "C", "V"];
 
 export default function CardDex(): JSX.Element {
@@ -72,9 +72,15 @@ export default function CardDex(): JSX.Element {
 
     return (
         <Container sx={{ mt: 4 }}>
-            <Typography variant="h4" gutterBottom>
-                카드 도감
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center' , gap: 2, mb: 2 }}>
+                <Typography variant="h4" gutterBottom>
+                    카드 도감
+                </Typography>
+                <Typography variant="h4" gutterBottom sx={{ color: 'gray' }}>
+                    (총 {filteredCards.length}장)
+                </Typography>
+            </Box>
+
 
             <Box sx={{ display: 'flex', justifyContent: 'center' , gap: 2, mb: 2 }}>
                 <FilterSelect
