@@ -24,6 +24,7 @@ export default function TradeDetail() {
     const navigate = useNavigate();
     const tradeData = location.state?.tradeData as Trade;
     const listState = location.state?.listState as ListState;
+    const sourcePath = location.state?.sourcePath; // useTradeList에서 전달받은 경로
     const [tradeCards, setTradeCards] = useState<TradeCardDetail[]>([]);
     const [owner, setOwner] = useState<boolean>(false);
     const [cancel, setCancel] = useState<boolean>(false); // 교환 취소 컨펌 모달
@@ -55,12 +56,14 @@ export default function TradeDetail() {
     }
 
     const handleBack = () => {
-        navigate('/trade', {
+        // sourcePath가 있으면 해당 경로로, 없으면 기본 경로인 '/trade'로 이동
+        navigate(sourcePath || '/trade', {
             state: {
                 listState: listState
             }
         });
     };
+
 
     const handleTradeRequest = () => {
         navigate('/selectCards', {

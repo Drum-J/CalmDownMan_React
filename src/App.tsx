@@ -40,7 +40,7 @@ function App(): JSX.Element {
                                     <Route index element={<MyInfo />} />
                                     <Route path="cards" element={<MyCards />} />
                                     <Route path="posts" element={<MyPosts />} />
-                                    <Route path="applications" element={<MyRequests />} />
+                                    <Route path="requests" element={<MyRequests />} />
                                 </Route>
                             </Routes>
                         </Layout>

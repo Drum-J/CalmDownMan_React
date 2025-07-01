@@ -6,7 +6,7 @@ const menuItems = [
     { text: '내 정보', path: '/mypage' },
     { text: '내가 가진 카드', path: '/mypage/cards' },
     { text: '내가 쓴 글', path: '/mypage/posts' },
-    { text: '내가 신청한 글', path: '/mypage/applications' },
+    { text: '내가 신청한 글', path: '/mypage/requests' },
 ];
 
 export default function MyPage() {
