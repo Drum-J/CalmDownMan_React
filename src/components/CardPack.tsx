@@ -4,6 +4,8 @@ import {JSX, useState} from "react";
 import ConfirmModal from "../modal/ConfirmModal";
 import CardOpenResultModal from "../modal/CardOpenResultModal";
 import {ApiResponse} from "../common/ApiResponse";
+import AlertModal from "../modal/AlertModal";
+import {useUser} from "../common/UserContext";
 
 interface CardPackProps {
     id: number;
@@ -15,22 +17,30 @@ export default function CardPack({id, title, imageUrl}: CardPackProps): JSX.Elem
     const [open, setOpen] = useState<boolean>(false);
     const [openResult, setOpenResult] = useState<boolean>(false);
     const [cards, setCards] = useState<Array<any>>([]);
+    const [openAlert, setOpenAlert] = useState<boolean>(false);
+    const [alertMessage, setAlertMessage] = useState<string>('');
+    const { refreshUserInfo } = useUser();
 
     const handleClick = (): void => {
         setOpen(true);
     }
 
+    const alertClose = (): void => {
+        setOpenAlert(false);
+    }
+
     const onConfirm = async (): Promise<void> => {
         try {
             const response = await api.post<ApiResponse<string[]>>(`/card/open/${id}`);
-            console.log(response.data.data);
+            await refreshUserInfo();
             setCards(response.data.data);
             setOpenResult(true);
         } catch (error) {
-            console.log(error);
+            setAlertMessage(error.response.data.data);
+            setOpenAlert(true);
+        } finally {
+            setOpen(false);
         }
-
-        setOpen(false);
     }
 
 
@@ -52,6 +62,11 @@ export default function CardPack({id, title, imageUrl}: CardPackProps): JSX.Elem
                 message={`${title}(을)를 오픈할까요?`}
                 onConfirm={onConfirm}
                 onCancel={() => setOpen(false)}
+            />}
+
+            {openAlert && <AlertModal
+                message={alertMessage}
+                onClick={alertClose}
             />}
 
             {openResult && (
