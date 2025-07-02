@@ -12,9 +12,10 @@ interface FilterSelectProps {
     value: string;
     onChange: (value: string) => void;
     options: Option[];
+    minWidth?: number;
 }
 
-export default function FilterSelect({ label, value, onChange, options }: FilterSelectProps): JSX.Element {
+export default function FilterSelect({ label, value, onChange, options, minWidth }: FilterSelectProps): JSX.Element {
     // MUI의 Select 컴포넌트의 onChange 타입에 맞춘 핸들러
     const handleChange = (event: SelectChangeEvent<string>) => {
         onChange(event.target.value);
@@ -24,7 +25,7 @@ export default function FilterSelect({ label, value, onChange, options }: Filter
     const labelId = `${label.toLowerCase().replace(/ /g, '-')}-select-label`;
 
     return (
-        <FormControl sx={{ minWidth: 300 }}>
+        <FormControl sx={{ minWidth: minWidth ? minWidth : 300 }}>
             <InputLabel id={labelId}>{label}</InputLabel>
             <Select
                 labelId={labelId}
