@@ -10,8 +10,8 @@ interface CardGridProps {
 export default function CardGrid({ cards }: CardGridProps): JSX.Element {
     return (
         <Grid container justifyContent={'center'} spacing={2}>
-            {cards.map((card) => (
-                <Grid key={card.id}>
+            {cards.map((card,index) => (
+                <Grid key={index}>
                     <CardItem card={card} />
                 </Grid>
             ))}

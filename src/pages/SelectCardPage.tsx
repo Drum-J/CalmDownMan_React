@@ -201,8 +201,6 @@ export default function SelectCardPage() {
             }
 
             if (purpose === 'gameReady') {
-                console.log("userId = " + userInfo.id);
-                console.log("== selectedCardsDetails == ");
                 const selectedCardsDetails: MyCardDetailDto[] = [];
                 for (const cardIdStr in selectedCards) {
                     const cardId = Number(cardIdStr);
@@ -215,9 +213,6 @@ export default function SelectCardPage() {
                             }
                         }
                     }
-                }
-                for (const card of selectedCardsDetails) {
-                    console.log(card.id + " : " + card.title);
                 }
                 if (selectedCardsDetails.length !== 7) {
                     alert("게임에 참가하기 위해서는 7장의 카드가 필요합니다.")

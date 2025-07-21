@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, CircularProgress, Paper } from '@mui/material';
-import api from '../common/axios';
-import { useUser } from '../common/UserContext';
+import { Box, Button, Typography } from '@mui/material';
 import CardGrid from "../components/card/CardGrid";
 import {Card as CardDto} from "../components/card/dto";
+import GameMatchingModal from "../modal/GameMatchingModal"; // GameMatchingModal 임포트
 
 const GameLobby = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { userInfo } = useUser();
     const { selectedCards } = location.state || {};
-    const [matchingStatus, setMatchingStatus] = useState('대기 중...');
-    const [isMatching, setIsMatching] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림/닫힘 상태
 
     const battleCards: CardDto[] = [];
     for (const card of selectedCards) {
@@ -27,6 +24,7 @@ const GameLobby = () => {
         });
     }
 
+    // 초기 카드 선택 유효성 검사
     useEffect(() => {
         if (!selectedCards || selectedCards.length !== 7) {
             alert('잘못된 접근입니다. 카드 선택 페이지로 돌아갑니다.');
@@ -34,31 +32,17 @@ const GameLobby = () => {
         }
     }, [selectedCards, navigate]);
 
-    const handleMatchMaking = async () => {
-        setIsMatching(true);
-        setMatchingStatus('상대를 찾고 있습니다...');
-        try {
-            const cardIds = selectedCards.map(card => card.id);
-            console.log('cardIds', cardIds);
-            // 백엔드에 매칭 요청
-            const response = await api.post('/game/matching/join', {
-                userId: userInfo.id,
-                cardIds: cardIds,
-            });
+    const handleMatchStart = () => {
+        setIsModalOpen(true); // 매칭 시작 버튼 클릭 시 모달 열기
+    };
 
-            if (response.data.success) {
-                const { roomId } = response.data.data;
-                setMatchingStatus('매칭 성공! 게임을 시작합니다.');
-                navigate(`/game/room/${roomId}`);
-            } else {
-                setMatchingStatus('매칭에 실패했습니다. 다시 시도해주세요.');
-                setIsMatching(false);
-            }
-        } catch (error) {
-            console.error('매칭 중 오류 발생:', error);
-            setMatchingStatus('매칭 중 오류가 발생했습니다. 다시 시도해주세요.');
-            setIsMatching(false);
-        }
+    const handleMatchSuccess = (roomId: string) => {
+        setIsModalOpen(false); // 매칭 성공 시 모달 닫기
+        navigate(`/game/room/${roomId}`, { state: { selectedCards: selectedCards } });
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false); // 모달 닫기
     };
 
     return (
@@ -71,22 +55,23 @@ const GameLobby = () => {
                     선택한 7장의 카드로 게임을 시작할 준비가 되었습니다.
                 </Typography>
                 <CardGrid cards={battleCards} />
-                {isMatching ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CircularProgress sx={{ mr: 2 }} />
-                        <Typography>{matchingStatus}</Typography>
-                    </Box>
-                ) : (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, gap: 1}}>
-                        <Button variant="outlined" color="secondary" size="large" onClick={() => navigate('/selectCards', { state: { purpose: 'gameReady' } })}>
-                            카드 다시 선택
-                        </Button>
-                        <Button variant="contained" color="primary" size="large" onClick={handleMatchMaking}>
-                            매칭 시작
-                        </Button>
-                    </Box>
-                )}
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, gap: 1}}>
+                    <Button variant="outlined" color="secondary" size="large" onClick={() => navigate('/selectCards', { state: { purpose: 'gameReady' } })}>
+                        카드 다시 선택
+                    </Button>
+                    <Button variant="contained" color="primary" size="large" onClick={handleMatchStart}>
+                        매칭 시작
+                    </Button>
+                </Box>
             </Box>
+
+            {/* GameMatchingModal 렌더링 */}
+            <GameMatchingModal
+                open={isModalOpen}
+                onClose={handleModalClose}
+                onMatchSuccess={handleMatchSuccess}
+                selectedCards={selectedCards}
+            />
         </Box>
     );
 };
