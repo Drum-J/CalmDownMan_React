@@ -21,6 +21,7 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import api from '../common/axios';
 import { ApiResponse } from "../common/ApiResponse";
 import { ListState, Trade, TradeCardDetail } from "../components/trade/dto";
+import {useUser} from "../common/UserContext";
 
 // API 응답에 대한 DTO
 interface MyCardDetailDto {
@@ -54,6 +55,7 @@ export default function SelectCardPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const state = location.state as LocationState;
+    const { userInfo } = useUser();
 
     useEffect(() => {
         if (!state?.purpose) {
@@ -198,22 +200,29 @@ export default function SelectCardPage() {
                 return;
             }
 
-            // 교환 등록 및 게임 준비 로직 (이 부분은 기존과 동일합니다)
-            const selectedCardsDetails: MyCardDetailDto[] = [];
-            for (const cardIdStr in selectedCards) {
-                const cardId = Number(cardIdStr);
-                const quantity = selectedCards[cardId];
-                if (quantity > 0) {
-                    const cardInfo = myCards.find(c => c.id === cardId);
-                    if (cardInfo) {
-                        for (let i = 0; i < quantity; i++) {
-                            selectedCardsDetails.push(cardInfo);
+            if (purpose === 'gameReady') {
+                console.log("userId = " + userInfo.id);
+                console.log("== selectedCardsDetails == ");
+                const selectedCardsDetails: MyCardDetailDto[] = [];
+                for (const cardIdStr in selectedCards) {
+                    const cardId = Number(cardIdStr);
+                    const quantity = selectedCards[cardId];
+                    if (quantity > 0) {
+                        const cardInfo = myCards.find(c => c.id === cardId);
+                        if (cardInfo) {
+                            for (let i = 0; i < quantity; i++) {
+                                selectedCardsDetails.push(cardInfo);
+                            }
                         }
                     }
                 }
-            }
-
-            if (purpose === 'gameReady') {
+                for (const card of selectedCardsDetails) {
+                    console.log(card.id + " : " + card.title);
+                }
+                if (selectedCardsDetails.length !== 7) {
+                    alert("게임에 참가하기 위해서는 7장의 카드가 필요합니다.")
+                    return;
+                }
                 navigate('/game/lobby', { state: { selectedCards: selectedCardsDetails } });
             }
 
@@ -226,6 +235,14 @@ export default function SelectCardPage() {
     };
 
     const totalSelectedCount = Object.values(selectedCards).reduce((sum, count) => sum + count, 0);
+
+    const isSubmitButtonDisabled = useMemo(() => {
+        if (isSubmitting) return true;
+        if (purpose === 'gameReady') {
+            return totalSelectedCount !== 7;
+        }
+        return totalSelectedCount === 0;
+    }, [purpose, totalSelectedCount, isSubmitting]);
 
     if (loading || !purpose) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}><CircularProgress /></Box>;
@@ -323,7 +340,7 @@ export default function SelectCardPage() {
                 </Button>
                 <Button variant="contained" color="primary" size="large"
                         onClick={handleSubmit}
-                        disabled={totalSelectedCount === 0 || isSubmitting}
+                        disabled={isSubmitButtonDisabled}
                 >
                     {pageTexts[purpose]?.submitButton}
                 </Button>
