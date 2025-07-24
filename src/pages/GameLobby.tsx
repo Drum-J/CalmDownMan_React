@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
 import CardGrid from "../components/card/CardGrid";
@@ -36,14 +36,14 @@ const GameLobby = () => {
         setIsModalOpen(true); // 매칭 시작 버튼 클릭 시 모달 열기
     };
 
-    const handleMatchSuccess = (roomId: string) => {
+    const handleMatchSuccess = useCallback((roomId: string) => {
         setIsModalOpen(false); // 매칭 성공 시 모달 닫기
-        navigate(`/game/room/${roomId}`, { state: { selectedCards: selectedCards } });
-    };
+        navigate('/game/room', { state: { gameRoomId: roomId } });
+    }, [navigate]);
 
-    const handleModalClose = () => {
+    const handleModalClose = useCallback(() => {
         setIsModalOpen(false); // 모달 닫기
-    };
+    }, []);
 
     return (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>

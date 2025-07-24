@@ -37,7 +37,7 @@ function App(): JSX.Element {
                                 <Route path="/selectCards" element={<SelectCardPage />} />
                                 <Route path="/trade/create" element={<TradePostCreate />} />
                                 <Route path="/game/lobby" element={<GameLobby />} />
-                                {/*<Route path="/game/room/:roomId" element={<GameRoom />} />*/}
+                                <Route path="/game/room" element={<GameRoom />} />
 
                                 {/* 마이페이지 라우트 설정 */}
                                 <Route path="/mypage" element={<MyPage />}>

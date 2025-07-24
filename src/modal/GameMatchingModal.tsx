@@ -30,34 +30,47 @@ const GameMatchingModal = ({ open, onClose, onMatchSuccess, selectedCards }: Gam
             setElapsedTime(0);
             const cardIds = selectedCards.map(card => card.id);
 
-            try {
-                // 1. 매칭 대기열 등록 API 호출
-                const response = await api.post('/game/matching/join', {
-                    playerId: userInfo.id,
-                    cardIds: cardIds,
-                });
+            // 1. WebSocket 연결 및 구독 시작
+            const socket = new SockJS('http://localhost:8080/ws-connection');
+            const client = new Client({
+                    webSocketFactory: () => socket,
+                    reconnectDelay: 5000,
+                    onConnect: async () => { // onConnect를 async 함수로 변경
+                        console.log('Connected to WebSocket for matching result');
+                        stompClientRef.current = client;
 
-                if (response.data.status === 200) {
-                    setStatus('waiting');
-                    setMessage('상대를 찾고 있습니다...');
-                    // 2. WebSocket 연결 및 구독 시작
-                    const socket = new SockJS('http://localhost:8080/ws-connection');
-                    const client = new Client({
-                        webSocketFactory: () => socket,
-                        reconnectDelay: 5000,
-                        onConnect: () => {
-                            console.log('Connected to WebSocket for matching result');
-                            stompClientRef.current = client;
+                        client.subscribe(`/queue/game/matching/success/${userInfo.id}`, (msg) => {
+                            const gameRoomId = JSON.parse(msg.body);
+                            console.log(`매칭 성공! Game Room ID: ${gameRoomId}`);
+                            setStatus('success');
+                            setMessage('매칭 성공! 게임을 시작합니다.');
+                            onMatchSuccess(gameRoomId);
+                            onClose(); // 매칭 성공 시 모달 닫기
+                        });
 
-                            client.subscribe(`/queue/game/matching/success/${userInfo.id}`, (msg) => {
-                                const gameRoomId = JSON.parse(msg.body);
-                                console.log(`매칭 성공! Game Room ID: ${gameRoomId}`);
-                                setStatus('success');
-                                setMessage('매칭 성공! 게임을 시작합니다.');
-                                onMatchSuccess(gameRoomId);
-                                onClose(); // 매칭 성공 시 모달 닫기
+                        // 2. WebSocket 연결 성공 후 매칭 대기열 등록 API 호출
+                        try {
+                            const response = await api.post('/game/matching/join', {
+                                playerId: userInfo.id,
+                                cardIds: cardIds,
                             });
-                        },
+
+                            if (response.data.status === 200) {
+                                setStatus('waiting');
+                                setMessage('상대를 찾고 있습니다...');
+                            } else {
+                                console.log(status, response.data.message);
+                                setStatus('error'); // API 호출 실패 시 에러 상태로 변경
+                                setMessage('매칭 대기열 등록에 실패했습니다. 다시 시도해주세요.');
+                                if (stompClientRef.current) stompClientRef.current.deactivate(); // 실패 시 웹소켓 연결 해제
+                            }
+                        } catch (error) {
+                            console.error('매칭 대기열 등록 중 오류 발생:', error);
+                            setStatus('error'); // API 호출 중 예외 발생 시 에러 상태로 변경
+                            setMessage('매칭 대기열 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+                            if (stompClientRef.current) stompClientRef.current.deactivate(); // 실패 시 웹소켓 연결 해제
+                        }
+                    },
                         onStompError: (frame) => {
                             console.error('Broker reported error: ' + frame.headers['message']);
                             console.error('Additional details: ' + frame.body);
@@ -74,17 +87,7 @@ const GameMatchingModal = ({ open, onClose, onMatchSuccess, selectedCards }: Gam
                         }
                     });
                     client.activate();
-                } else {
-                    console.log(status, response.data.message);
-                    setStatus('waiting');
-                    setMessage('매칭 대기열 등록에 실패했습니다. 다시 시도해주세요.');
-                }
-            } catch (error) {
-                console.error('매칭 대기열 등록 중 오류 발생:', error);
-                setStatus('waiting');
-                setMessage('매칭 대기열 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
-            }
-        };
+            };
 
         if (open) {
             initiateMatching();
