@@ -33,6 +33,9 @@ export interface GameResultDto {
 export interface FieldCardDto {
     gameCardId: number;
     imageUrl: string;
+    grade: string,
+    power: number,
+    attackType : string,
     isFront: boolean; // true: 앞면, false: 뒷면
     isMine: boolean;  // true: 내 카드, false: 상대 카드
 }

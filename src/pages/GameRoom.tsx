@@ -41,6 +41,21 @@ const GameRoom = () => {
         setShowCardDetailModal(true);
     };
 
+    const handleFieldCardClick = (card: FieldCardDto) => {
+        // FieldCardDto를 MyGameCardDto와 호환되는 형태로 변환
+        const convertedCard: MyGameCardDto = {
+            gameCardId: card.gameCardId,
+            cardId: card.gameCardId, // FieldCardDto에는 cardId가 없으므로 gameCardId를 사용
+            title: "Field Card", // FieldCardDto에는 title이 없으므로 임시 값 사용
+            attackType: card.attackType,
+            grade: card.grade,
+            power: card.power,
+            imageUrl: card.imageUrl,
+        };
+        setSelectedCardForDetail(convertedCard);
+        setShowCardDetailModal(true);
+    };
+
     const handleCloseCardDetailModal = () => {
         setShowCardDetailModal(false);
         setSelectedCardForDetail(null);
@@ -232,7 +247,13 @@ const GameRoom = () => {
             {/* Game Board */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4, p: 2, backgroundColor: 'grey.100', borderRadius: 2 }}>
                 {fieldNumbers.map(fieldNum => (
-                    <FieldSlot key={fieldNum} fieldNumber={fieldNum} card={fieldCards[fieldNum]} isPlayer1={isPlayer1} />
+                    <FieldSlot
+                        key={fieldNum}
+                        fieldNumber={fieldNum}
+                        card={fieldCards[fieldNum]}
+                        isPlayer1={isPlayer1}
+                        onClick={handleFieldCardClick} // Pass the new handler
+                    />
                 ))}
             </Box>
 
@@ -258,6 +279,7 @@ const GameRoom = () => {
                 card={selectedCardForDetail}
                 onSubmit={handleSubmitCard}
                 isMyTurn={gameInfo?.currentTurnPlayerId === userInfo?.id}
+                isFieldCard={selectedCardForDetail?.title === "Field Card"} // 필드 카드 여부 전달
             />
         </Box>
     );

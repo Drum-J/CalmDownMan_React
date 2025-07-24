@@ -5,9 +5,10 @@ interface FieldSlotProps {
     fieldNumber: number;
     card: FieldCardDto | null;
     isPlayer1: boolean;
+    onClick?: (card: FieldCardDto) => void; // Add onClick prop
 }
 
-const FieldSlot = ({ fieldNumber, card, isPlayer1 }: FieldSlotProps) => {
+const FieldSlot = ({ fieldNumber, card, isPlayer1, onClick }: FieldSlotProps) => {
     const getBorderColor = () => {
         if (!card) {
             return 'grey.400'; // 빈 슬롯
@@ -39,7 +40,12 @@ const FieldSlot = ({ fieldNumber, card, isPlayer1 }: FieldSlotProps) => {
         >
             {card ? (
                 card.isFront ? (
-                    <img src={card.imageUrl} alt="card" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
+                    <img
+                        src={card.imageUrl}
+                        alt="card"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
+                        onClick={() => onClick && card && onClick(card)} // Apply onClick here
+                    />
                 ) : (
                     <Paper
                         sx={{
