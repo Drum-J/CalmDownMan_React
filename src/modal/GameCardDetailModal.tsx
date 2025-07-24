@@ -33,14 +33,11 @@ const GameCardDetailModal: React.FC<CardDetailModalProps> = ({ open, onClose, ca
             }}
         >
             <Box className="modal-content" sx={{ p: 4, textAlign: 'center', maxWidth: 400 }}>
-                <Typography id="game-card-detail-modal-title" variant="h5" component="h2" gutterBottom>
-                    {card.title}
-                </Typography>
                 <CardMedia
                     component="img"
                     image={card.imageUrl}
                     alt={card.title}
-                    sx={{ width: '100%', height: 'auto', maxHeight: 300, objectFit: 'contain', mb: 2 }}
+                    sx={{ width: '100%', height: 'auto', maxHeight: 400, objectFit: 'contain', mb: 2 }}
                 />
                 <Typography id="card-detail-modal-description" sx={{ mt: 2 }}>
                     <Typography><strong>등급:</strong> {card.grade}</Typography>

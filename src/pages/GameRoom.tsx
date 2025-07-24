@@ -146,7 +146,7 @@ const GameRoom = () => {
                 </Box>
             </Box>
 
-            <CardDetailModal
+            <GameCardDetailModal
                 open={showCardDetailModal}
                 onClose={handleCloseCardDetailModal}
                 card={selectedCardForDetail}
