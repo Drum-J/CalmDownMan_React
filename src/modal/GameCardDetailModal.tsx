@@ -8,9 +8,10 @@ interface CardDetailModalProps {
     onClose: () => void;
     card: MyGameCardDto | null;
     onSubmit: (cardId: number) => void; // 카드 제출을 위한 콜백
+    isMyTurn: boolean; // 내 턴인지 여부
 }
 
-const GameCardDetailModal: React.FC<CardDetailModalProps> = ({ open, onClose, card, onSubmit }) => {
+const GameCardDetailModal: React.FC<CardDetailModalProps> = ({ open, onClose, card, onSubmit, isMyTurn }) => {
     if (!card) {
         return null; // 카드가 없으면 모달을 렌더링하지 않음
     }
@@ -45,7 +46,7 @@ const GameCardDetailModal: React.FC<CardDetailModalProps> = ({ open, onClose, ca
                     <Typography><strong>공격 타입:</strong> {card.attackType}</Typography>
                 </Typography>
                 <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
-                    <Button onClick={handleSubmitClick} variant="contained" color="primary">
+                    <Button onClick={handleSubmitClick} variant="contained" color="primary" disabled={!isMyTurn}>
                         제출
                     </Button>
                     <Button onClick={onClose} variant="contained" color="secondary">

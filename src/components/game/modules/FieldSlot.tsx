@@ -25,8 +25,8 @@ const FieldSlot = ({ fieldNumber, card, isPlayer1 }: FieldSlotProps) => {
     return (
         <Box
             sx={{
-                width: 120,
-                height: 180,
+                width: 140,
+                height: 200,
                 border: `3px solid ${getBorderColor()}`,
                 borderRadius: '8px',
                 display: 'flex',

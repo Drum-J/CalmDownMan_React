@@ -5,6 +5,7 @@ export interface GameInfoDto {
     currentTurnPlayerId: number;
     player1Id: number;
     player2Id: number;
+    fieldCards: Record<number, FieldCardDto | null>;
 }
 
 // 카드 제출 시 받는 전체 메시지
@@ -14,6 +15,19 @@ export interface SubmitMessageDto {
     battleCardDto: BattleCardDto | null;
     myHandCards: MyGameCardDto[] | null;
 }
+
+// 배틀 완료 후 받는 전체 메세지
+export interface BattleMessageDto {
+    currentTurnPlayerId: number;
+    fieldCards: Record<number, FieldCardDto | null>;
+    winnerId: number;
+}
+
+export interface GameResultDto {
+    message: string;
+    finalWinnerId: number | null;
+}
+
 
 // 필드에 놓인 카드 정보
 export interface FieldCardDto {
@@ -39,11 +53,3 @@ export interface MyGameCardDto {
     power: number;
     imageUrl: string;
 }
-
-// 배틀 완료 후 받는 전체 메세지
-export interface BattleMessageDto {
-    currentTurnPlayerId: number;
-    fieldCards: Record<number, FieldCardDto | null>;
-    winnerId: number;
-}
-

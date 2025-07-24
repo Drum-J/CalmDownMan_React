@@ -4,17 +4,18 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import api from '../common/axios';
 import { useUser } from '../common/UserContext';
+import { useNavigate } from 'react-router-dom';
 import './Modal.css';
 
 interface GameMatchingModalProps {
     open: boolean;
     onClose: () => void;
-    onMatchSuccess: (roomId: string) => void;
-    selectedCards: any[]; // MyCardDetailDto[] 타입이 될 것임, SelectCardPage.tsx 에 있음.
+    selectedCards: any[]; // MyCardDetailDto[] 타입이 될 것임, SelectCardPage.tsx 에 있음。
 }
 
-const GameMatchingModal = ({ open, onClose, onMatchSuccess, selectedCards }: GameMatchingModalProps) => {
+const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalProps) => {
     const { userInfo } = useUser();
+    const navigate = useNavigate();
     const [status, setStatus] = useState<'idle' | 'registering' | 'waiting' | 'cancelling' | 'error' | 'success'>('idle');
     const [message, setMessage] = useState('');
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -44,7 +45,7 @@ const GameMatchingModal = ({ open, onClose, onMatchSuccess, selectedCards }: Gam
                             console.log(`매칭 성공! Game Room ID: ${gameRoomId}`);
                             setStatus('success');
                             setMessage('매칭 성공! 게임을 시작합니다.');
-                            onMatchSuccess(gameRoomId);
+                            navigate(`/gameRoom/${gameRoomId}`);
                             onClose(); // 매칭 성공 시 모달 닫기
                         });
 
@@ -116,7 +117,7 @@ const GameMatchingModal = ({ open, onClose, onMatchSuccess, selectedCards }: Gam
                 timerRef.current = null;
             }
         };
-    }, [open, userInfo.id, selectedCards, onMatchSuccess, onClose]); // status를 의존성 배열에서 제거
+    }, [open, userInfo.id, selectedCards, onClose, navigate]); // status를 의존성 배열에서 제거
 
     // 타이머 useEffect
     useEffect(() => {

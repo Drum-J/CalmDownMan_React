@@ -36,11 +36,6 @@ const GameLobby = () => {
         setIsModalOpen(true); // 매칭 시작 버튼 클릭 시 모달 열기
     };
 
-    const handleMatchSuccess = useCallback((roomId: string) => {
-        setIsModalOpen(false); // 매칭 성공 시 모달 닫기
-        navigate('/game/room', { state: { gameRoomId: roomId } });
-    }, [navigate]);
-
     const handleModalClose = useCallback(() => {
         setIsModalOpen(false); // 모달 닫기
     }, []);
@@ -69,7 +64,6 @@ const GameLobby = () => {
             <GameMatchingModal
                 open={isModalOpen}
                 onClose={handleModalClose}
-                onMatchSuccess={handleMatchSuccess}
                 selectedCards={selectedCards}
             />
         </Box>
