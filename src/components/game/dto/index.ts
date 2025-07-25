@@ -27,6 +27,12 @@ export interface BattleMessageDto {
     gameWinnerId: number | null;
 }
 
+// 항복 했을 때 받는 전체 메세지
+export interface SurrenderMessageDto{
+    message: string;
+    gameWinnerId: number;
+}
+
 export interface GameResultDto {
     message: string;
     finalWinnerId: number | null;

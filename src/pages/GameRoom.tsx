@@ -11,7 +11,7 @@ import {
     GameResultDto,
     SubmitMessageDto,
     BattleMessageDto,
-    BattleCardDto,
+    BattleCardDto, SurrenderMessageDto,
 } from '../components/game/dto';
 import FieldSlot from '../components/game/modules/FieldSlot';
 import GameCardDetailModal from '../modal/GameCardDetailModal';
@@ -20,6 +20,7 @@ import GameResultModal from '../modal/GameResultModal';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useRef } from 'react';
+import ConfirmModal from "../modal/ConfirmModal";
 
 const GameRoom = () => {
     const { gameRoomId } = useParams<{ gameRoomId: string }>();
@@ -44,6 +45,7 @@ const GameRoom = () => {
     const [battleResultWinnerId, setBattleResultWinnerId] = useState<number | null>(null);
     const [showGameResultModal, setShowGameResultModal] = useState<boolean>(false);
     const [gameWinnerId, setGameWinnerId] = useState<number | null>(null);
+    const [showSurrenderConfirmModal, setShowSurrenderConfirmModal] = useState<boolean>(false);
     const stompClientRef = useRef<Client | null>(null);
 
     const handleCardClick = (card: MyGameCardDto) => {
@@ -80,6 +82,13 @@ const GameRoom = () => {
             alert('내 턴이 아닙니다.');
             return;
         }
+
+        const fieldCardCount = Object.values(fieldCards).filter(card => card !== null).length;
+        if (fieldCardCount >= 6) {
+            alert('필드가 가득 찼습니다. 더 이상 카드를 제출할 수 없습니다.');
+            return;
+        }
+
         try {
             const response = await api.post(`/game/${gameRoomId}/cardSubmit`, {
                 playerId: userInfo.id,
@@ -96,6 +105,26 @@ const GameRoom = () => {
             console.error('카드 제출 중 오류 발생:', error);
             alert('카드 제출 중 오류가 발생했습니다.');
         }
+    };
+
+    const handleSurrender = () => {
+        setShowSurrenderConfirmModal(true);
+    };
+
+    const handleConfirmSurrender = async () => {
+        if (!userInfo || !gameRoomId) {
+            console.error('유저 정보 또는 게임방 ID가 없습니다.');
+            return;
+        }
+        try {
+            console.log("surrender ", userInfo.id);
+            await api.post(`/game/${gameRoomId}/surrender`, { playerId: userInfo.id });
+            // 성공 시 별도 처리 없음. WebSocket을 통해 결과가 전달될 것임.
+        } catch (error) {
+            console.error('항복 처리 중 오류 발생:', error);
+            alert('항복 처리 중 오류가 발생했습니다.');
+        }
+        setShowSurrenderConfirmModal(false);
     };
 
     const handleFieldBattleClick = async () => {
@@ -268,6 +297,12 @@ const GameRoom = () => {
                             setIsBattleInProgress(false); // 배틀 종료
                             // TODO: 배틀 결과 UI 처리
                         }
+                        // SurrenderMessageDto 처리
+                        else if(parsedMessage.message === "SURRENDER") {
+                            const surrenderMessage: SurrenderMessageDto = parsedMessage;
+                            setGameWinnerId(surrenderMessage.gameWinnerId);
+                            setShowGameResultModal(true);
+                        }
                         // 기타 메시지 타입 처리 (필요하다면)
                         else {
                             console.warn('알 수 없는 개인 메시지 타입:', parsedMessage);
@@ -338,6 +373,17 @@ const GameRoom = () => {
                 ))}
             </Box>
 
+            <Button
+                variant="contained"
+                color="error"
+                size="large"
+                sx={{ mt: 4 }}
+                onClick={handleSurrender}
+                disabled={showGameResultModal} // 게임 종료 시 비활성화
+            >
+                항복
+            </Button>
+
             <Box mt={4}>
                 <Typography variant="h6">내 카드:</Typography>
                 {gameInfo.myCards.length === 0 && (
@@ -395,6 +441,12 @@ const GameRoom = () => {
                     myPlayerId={userInfo?.id || 0}
                 />
             )}
+
+            {showSurrenderConfirmModal && <ConfirmModal
+                message="정말 항복하시겠습니까?"
+                onConfirm={handleConfirmSurrender}
+                onCancel={() => setShowSurrenderConfirmModal(false)}
+            />}
         </Box>
     );
 };
