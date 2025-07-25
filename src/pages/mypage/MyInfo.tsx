@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import ProfileView from '../../components/mypage/ProfileView';
 import ProfileEdit from '../../components/mypage/ProfileEdit';
 import PasswordCheckModal from '../../modal/PasswordCheckModal';
@@ -6,9 +6,13 @@ import { useUser } from '../../common/UserContext';
 import { Box, Container } from "@mui/material";
 
 export default function MyInfo() {
-    const { userInfo } = useUser();
+    const { userInfo, refreshUserInfo } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        refreshUserInfo();
+    }, []);
 
     const handleEditClick = () => {
         setIsModalOpen(true);

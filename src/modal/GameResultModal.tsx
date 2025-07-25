@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import './Modal.css';
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../common/UserContext";
 
 interface GameResultModalProps {
     winnerId: number | null;
@@ -9,8 +10,10 @@ interface GameResultModalProps {
 
 const GameResultModal = ({ winnerId, myPlayerId }: GameResultModalProps) => {
     const navigate = useNavigate();
+    const { refreshUserInfo } = useUser();
 
-    const handleGoToLobby = () => {
+    const handleGoToLobby = async () => {
+        await refreshUserInfo();
         navigate('/');
     };
 

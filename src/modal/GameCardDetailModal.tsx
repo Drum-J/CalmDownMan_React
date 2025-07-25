@@ -44,11 +44,11 @@ const GameCardDetailModal: React.FC<CardDetailModalProps> = ({ open, onClose, ca
                     referrerPolicy="no-referrer"
                     sx={{ width: '100%', height: 'auto', maxHeight: 400, objectFit: 'contain', mb: 2 }}
                 />
-                <Typography id="game-card-detail-modal-description" sx={{ mt: 2 }}>
+                <Box id="game-card-detail-modal-description" sx={{ mt: 2 }}>
                     <Typography><strong>등급:</strong> {card.grade}</Typography>
                     <Typography><strong>침투력:</strong> {card.power}</Typography>
                     <Typography><strong>공격 타입:</strong> {card.attackType}</Typography>
-                </Typography>
+                </Box>
                 <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
                     {!isFieldCard && (
                         <Button onClick={handleSubmitClick} variant="contained" color="primary" disabled={!isMyTurn}>
