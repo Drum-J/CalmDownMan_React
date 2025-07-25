@@ -35,7 +35,13 @@ const FieldSlot = ({ fieldNumber, card, isPlayer1, onClick }: FieldSlotProps) =>
                 justifyContent: 'center',
                 m: 1,
                 backgroundColor: 'grey.200',
-                position: 'relative'
+                position: 'relative',
+                cursor: (card && (card.isMine || card.isFront)) ? 'pointer' : 'default' // 내 카드이거나 앞면 카드일 때만 커서 변경
+            }}
+            onClick={() => { // Box에 onClick 적용
+                if (card && (card.isMine || card.isFront) && onClick) {
+                    onClick(card);
+                }
             }}
         >
             {card ? (
@@ -43,8 +49,7 @@ const FieldSlot = ({ fieldNumber, card, isPlayer1, onClick }: FieldSlotProps) =>
                     <img
                         src={card.imageUrl}
                         alt="card"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', cursor: 'pointer' }}
-                        onClick={() => onClick && card && onClick(card)} // Apply onClick here
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
                     />
                 ) : (
                     <Paper

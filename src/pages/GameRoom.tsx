@@ -3,17 +3,20 @@ import { useParams } from 'react-router-dom';
 import { useUser } from '../common/UserContext';
 import api from '../common/axios';
 import { ApiResponse } from '../common/ApiResponse';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import {Box, Button, CircularProgress, Typography} from '@mui/material';
 import {
     GameInfoDto,
     FieldCardDto,
     MyGameCardDto,
     GameResultDto,
     SubmitMessageDto,
-    BattleMessageDto
+    BattleMessageDto,
+    BattleCardDto,
 } from '../components/game/dto';
 import FieldSlot from '../components/game/modules/FieldSlot';
 import GameCardDetailModal from '../modal/GameCardDetailModal';
+import BattleModal from '../modal/BattleModal';
+import GameResultModal from '../modal/GameResultModal';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useRef } from 'react';
@@ -34,7 +37,14 @@ const GameRoom = () => {
     const [error, setError] = useState<string | null>(null);
     const [showCardDetailModal, setShowCardDetailModal] = useState<boolean>(false);
     const [selectedCardForDetail, setSelectedCardForDetail] = useState<MyGameCardDto | null>(null);
-    const stompClientRef = useRef<Client | null>(null); // WebSocket 클라이언트 참조 추가
+    const [isBattleInProgress, setIsBattleInProgress] = useState<boolean>(false);
+    const [showBattleModal, setShowBattleModal] = useState<boolean>(false);
+    const [battleCard1ImageUrl, setBattleCard1ImageUrl] = useState<string | null>(null);
+    const [battleCard2ImageUrl, setBattleCard2ImageUrl] = useState<string | null>(null);
+    const [battleResultWinnerId, setBattleResultWinnerId] = useState<number | null>(null);
+    const [showGameResultModal, setShowGameResultModal] = useState<boolean>(false);
+    const [gameWinnerId, setGameWinnerId] = useState<number | null>(null);
+    const stompClientRef = useRef<Client | null>(null);
 
     const handleCardClick = (card: MyGameCardDto) => {
         setSelectedCardForDetail(card);
@@ -85,6 +95,54 @@ const GameRoom = () => {
         } catch (error) {
             console.error('카드 제출 중 오류 발생:', error);
             alert('카드 제출 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleFieldBattleClick = async () => {
+        if (!userInfo || !gameRoomId || !gameInfo) {
+            console.error('유저 정보, 게임방 ID 또는 게임 정보가 없습니다.');
+            return;
+        }
+        if (gameInfo.currentTurnPlayerId !== userInfo.id) {
+            alert('내 턴이 아닙니다.');
+            return;
+        }
+
+        const response = await api.post(`/game/${gameRoomId}/fieldBattle`, {
+            currentTurnPlayerId: userInfo.id,
+        });
+
+        if (response.status === 200) {
+            console.log('배틀 요청 성공!');
+            // 배틀 결과는 WebSocket을 통해 BattleMessageDto로 수신됩니다.
+        } else {
+            console.error('배틀 요청 실패:', response.data.message);
+            alert(`배틀 요청 실패: ${response.data.message}`);
+        }
+    };
+
+    const handleBattle = async (battleCardDto: BattleCardDto) => {
+        if (!gameRoomId || !userInfo) {
+            console.error('유저 정보 또는 게임방 ID가 없습니다.');
+            return;
+        }
+        try {
+            const response = await api.post(`/game/${gameRoomId}/battle`, {
+                gameCardId1: battleCardDto.gameCardId1,
+                gameCardId2: battleCardDto.gameCardId2,
+                playerId: userInfo.id // 배틀을 요청하는 플레이어 ID
+            });
+
+            if (response.status === 200) {
+                console.log('배틀 요청 성공!');
+                // 배틀 결과는 WebSocket을 통해 BattleMessageDto로 수신됩니다.
+            } else {
+                console.error('배틀 요청 실패:', response.data.message);
+                alert(`배틀 요청 실패: ${response.data.message}`);
+            }
+        } catch (error) {
+            console.error('배틀 요청 중 오류 발생:', error);
+            alert('배틀 요청 중 오류가 발생했습니다.');
         }
     };
 
@@ -139,14 +197,6 @@ const GameRoom = () => {
                     console.log('Connected to WebSocket in GameRoom');
                     stompClientRef.current = client;
 
-                    // Subscribe to game result topic
-                    client.subscribe(`/topic/game/${gameRoomId}`, (message) => {
-                        const gameResult: GameResultDto = JSON.parse(message.body);
-                        console.log('Game Result Received:', gameResult);
-                        // TODO: 게임 결과 처리 로직 (예: 모달 띄우기, 게임 종료 처리)
-                        alert(`게임 결과: ${gameResult.message}, 승자: ${gameResult.finalWinnerId ? gameResult.finalWinnerId : '무승부'}`);
-                    });
-
                     // Subscribe to personal message queue
                     client.subscribe(`/queue/game/${gameRoomId}/${userInfo.id}`, (message) => {
                         const parsedMessage = JSON.parse(message.body);
@@ -168,9 +218,26 @@ const GameRoom = () => {
                                     currentTurnPlayerId: submitMessage.currentTurnPlayerId,
                                 };
                             });
-                            if (submitMessage.battleCardDto) {
+                            if (submitMessage.gameWinnerId !== null) { // 카드 제출 후 모든 필드를 차지한 경우
+                                setGameWinnerId(submitMessage.gameWinnerId);
+                                setShowGameResultModal(true);
+                            } else if (submitMessage.battleCardDto) {
                                 console.log('배틀 발생!', submitMessage.battleCardDto);
-                                // TODO: 배틀 애니메이션 또는 UI 처리
+                                setIsBattleInProgress(true); // 배틀 시작
+                                setShowBattleModal(true); // 배틀 모달 열기
+                                setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
+
+                                // 필드 카드에서 이미지 URL 가져오기
+                                const card1 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId1);
+                                const card2 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId2);
+
+                                setBattleCard1ImageUrl(card1?.imageUrl || null);
+                                setBattleCard2ImageUrl(card2?.imageUrl || null);
+
+                                // 현재 턴 플레이어만 배틀 API를 호출하도록 조건 추가
+                                if (userInfo?.id === submitMessage.currentTurnPlayerId) {
+                                    handleBattle(submitMessage.battleCardDto); // 배틀 API 호출
+                                }
                             }
                         } 
                         // BattleMessageDto 처리
@@ -184,7 +251,21 @@ const GameRoom = () => {
                                     currentTurnPlayerId: battleMessage.currentTurnPlayerId,
                                 };
                             });
+                            setGameWinnerId(battleMessage.gameWinnerId);
+                            // 필드 배틀 진행 시 배틀 모달 처리
+                            if (battleMessage.card1Image !== null && battleMessage.card2Image !== null) {
+                                setIsBattleInProgress(true); // 배틀 시작
+                                setShowBattleModal(true); // 배틀 모달 열기
+                                setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
+
+                                setBattleCard1ImageUrl(battleMessage.card1Image);
+                                setBattleCard2ImageUrl(battleMessage.card2Image);
+                            }
+
                             console.log('배틀 결과:', battleMessage.winnerId);
+                            setBattleResultWinnerId(battleMessage.winnerId); // 배틀 결과 승자 ID 저장
+                            // 배틀 종료는 isBattleInProgress가 false로 변경될 때 모달이 닫히도록 처리
+                            setIsBattleInProgress(false); // 배틀 종료
                             // TODO: 배틀 결과 UI 처리
                         }
                         // 기타 메시지 타입 처리 (필요하다면)
@@ -259,6 +340,18 @@ const GameRoom = () => {
 
             <Box mt={4}>
                 <Typography variant="h6">내 카드:</Typography>
+                {gameInfo.myCards.length === 0 && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size={'large'}
+                        sx={{ mt: 2 }}
+                        onClick={handleFieldBattleClick}
+                        disabled={isBattleInProgress || gameInfo.currentTurnPlayerId !== userInfo?.id}
+                    >
+                        필드 배틀 시작
+                    </Button>
+                )}
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                     {gameInfo.myCards.map((card) => (
                         <img
@@ -278,9 +371,30 @@ const GameRoom = () => {
                 onClose={handleCloseCardDetailModal}
                 card={selectedCardForDetail}
                 onSubmit={handleSubmitCard}
-                isMyTurn={gameInfo?.currentTurnPlayerId === userInfo?.id}
+                isMyTurn={gameInfo?.currentTurnPlayerId === userInfo?.id && !isBattleInProgress} // 내 턴이면서 배틀 중이 아닐 때만 제출 가능
                 isFieldCard={selectedCardForDetail?.title === "Field Card"} // 필드 카드 여부 전달
             />
+
+            <BattleModal
+                open={showBattleModal}
+                onClose={() => {
+                    setShowBattleModal(false);
+                    if (gameWinnerId !== null) {
+                        setShowGameResultModal(true);
+                    }
+                }}
+                card1ImageUrl={battleCard1ImageUrl}
+                card2ImageUrl={battleCard2ImageUrl}
+                winnerId={battleResultWinnerId}
+                myPlayerId={userInfo?.id || 0}
+            />
+
+            {showGameResultModal && (
+                <GameResultModal
+                    winnerId={gameWinnerId}
+                    myPlayerId={userInfo?.id || 0}
+                />
+            )}
         </Box>
     );
 };

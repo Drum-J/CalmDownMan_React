@@ -14,6 +14,7 @@ export interface SubmitMessageDto {
     fieldCards: Record<number, FieldCardDto | null>; // 필드 번호(1-6)를 key로 가짐
     battleCardDto: BattleCardDto | null;
     myHandCards: MyGameCardDto[] | null;
+    gameWinnerId: number | null;
 }
 
 // 배틀 완료 후 받는 전체 메세지
@@ -21,6 +22,9 @@ export interface BattleMessageDto {
     currentTurnPlayerId: number;
     fieldCards: Record<number, FieldCardDto | null>;
     winnerId: number;
+    card1Image: string | null;
+    card2Image: string | null;
+    gameWinnerId: number | null;
 }
 
 export interface GameResultDto {
