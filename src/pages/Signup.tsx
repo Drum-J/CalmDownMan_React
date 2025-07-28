@@ -18,6 +18,8 @@ export default function Signup() : JSX.Element {
     const [passwordCheck, setPasswordCheck] = useState<string>("");
     const [usernameChecked, setUsernameChecked] = useState<boolean>(false);
     const [usernameMessage, setUsernameMessage] = useState<string>("");
+    const [nicknameChecked, setNicknameChecked] = useState<boolean>(false);
+    const [nicknameMessage, setNicknameMessage] = useState<string>("");
     const [errors, setErrors] = useState<string[]>([]);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
@@ -28,6 +30,7 @@ export default function Signup() : JSX.Element {
         password &&
         passwordCheck &&
         usernameChecked &&
+        nicknameChecked &&
         password === passwordCheck;
 
     useEffect(() => {
@@ -35,6 +38,12 @@ export default function Signup() : JSX.Element {
         setUsernameChecked(false);
         setUsernameMessage("");
     }, [username]);
+
+    useEffect(() => {
+        // nickname 입력이 바귀면 중복 체크 무효화
+        setNicknameChecked(false);
+        setNicknameMessage("");
+    }, [nickname]);
 
     const handleCheckUsername = async () => {
         try {
@@ -59,6 +68,30 @@ export default function Signup() : JSX.Element {
             setUsernameChecked(false);
         }
     };
+
+    const handleCheckNickname = async () => {
+        try {
+            if (!nickname) {
+                setNicknameMessage("닉네임을 입력해주세요!");
+                return;
+            }
+
+            const response = await api.get<ApiResponse<string>>("/signup/checkNickname", {
+                params: {nickname},
+            });
+
+            setNicknameMessage(response.data.data);
+            setNicknameChecked(true);
+        } catch (err) {
+            const error = err as ApiError;
+            if (error.response?.data) {
+                setNicknameMessage(error.response.data.data);
+            } else {
+                setNicknameMessage("서버 오류가 발생했습니다.");
+            }
+            setNicknameChecked(false);
+        }
+    }
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
@@ -153,12 +186,20 @@ export default function Signup() : JSX.Element {
                             variant="outlined"
                             value={nickname}
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
-                            fullWidth
+                            sx={{width:424}}
                             autoFocus
                         />
-
+                        <Button
+                            type="button"
+                            variant="contained"
+                            color="primary"
+                            sx={{height:56, marginLeft:3}}
+                            onClick={handleCheckNickname}
+                        >
+                            닉네임 중복 체크
+                        </Button>
+                        {nicknameMessage && <Box>{nicknameMessage}</Box>}
                         {errors.includes("nickname") && <Box style={{color: "red"}}>닉네임은 2글자 이상으로 입력해 주세요.</Box>}
-                        {errors.includes("existsNickname") && <Box style={{color: "red"}}>이미 사용 중인 닉네임입니다.</Box>}
                     </Box>
 
                     <Box>
