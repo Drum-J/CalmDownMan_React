@@ -194,6 +194,13 @@ const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalPr
                 {status === 'error' && (
                     <Stack spacing={2} direction="row" justifyContent="center" sx={{ mt: 3 }}>
                         <Button
+                            onClick={handleCancelMatching}
+                            variant="contained"
+                            color="secondary"
+                        >
+                            매칭 취소
+                        </Button>
+                        <Button
                             onClick={onClose}
                             variant="contained"
                             color="primary"

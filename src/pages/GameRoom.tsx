@@ -21,6 +21,8 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useRef } from 'react';
 import ConfirmModal from "../modal/ConfirmModal";
+import TurnTimer from "../components/game/modules/TurnTimer";
+import usePreventLeave from "../hooks/usePreventLeave";
 
 const GameRoom = () => {
     const { gameRoomId } = useParams<{ gameRoomId: string }>();
@@ -46,7 +48,13 @@ const GameRoom = () => {
     const [showGameResultModal, setShowGameResultModal] = useState<boolean>(false);
     const [gameWinnerId, setGameWinnerId] = useState<number | null>(null);
     const [showSurrenderConfirmModal, setShowSurrenderConfirmModal] = useState<boolean>(false);
+    const [timeLeft, setTimeLeft] = useState(90);
     const stompClientRef = useRef<Client | null>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const { enablePrevent, disablePrevent } = usePreventLeave(
+        "페이지를 벗어나면 게임에서 패배 처리될 수 있습니다. 정말로 이동하시겠습니까?"
+    );
+
 
     const handleCardClick = (card: MyGameCardDto) => {
         setSelectedCardForDetail(card);
@@ -74,6 +82,9 @@ const GameRoom = () => {
     };
 
     const handleSubmitCard = async (gameCardId: number) => {
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
         if (!userInfo || !gameRoomId) {
             console.error('유저 정보 또는 게임방 ID가 없습니다.');
             return;
@@ -128,6 +139,9 @@ const GameRoom = () => {
     };
 
     const handleFieldBattleClick = async () => {
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
         if (!userInfo || !gameRoomId || !gameInfo) {
             console.error('유저 정보, 게임방 ID 또는 게임 정보가 없습니다.');
             return;
@@ -328,6 +342,51 @@ const GameRoom = () => {
         }
     }, [gameRoomId, userInfo?.id]);
 
+    useEffect(() => {
+        const isMyTurn = gameInfo?.currentTurnPlayerId === userInfo?.id;
+
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+
+        if (isMyTurn && !showGameResultModal) {
+            setTimeLeft(90);
+
+            timerRef.current = setInterval(() => {
+                setTimeLeft(prevTime => {
+                    if (prevTime <= 1) {
+                        clearInterval(timerRef.current!);
+                        if (gameInfo?.myCards && gameInfo.myCards.length > 0) {
+                            const randomCard = gameInfo.myCards[Math.floor(Math.random() * gameInfo.myCards.length)];
+                            handleSubmitCard(randomCard.gameCardId);
+                        } else {
+                            handleFieldBattleClick();
+                        }
+                        return 0;
+                    }
+                    return prevTime - 1;
+                });
+            }, 1000);
+        } else {
+            setTimeLeft(90); // Reset time when not my turn
+        }
+
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [gameInfo?.currentTurnPlayerId, userInfo?.id, showGameResultModal]);
+
+    useEffect(() => {
+        if (showGameResultModal) {
+            disablePrevent();
+        } else {
+            enablePrevent();
+        }
+    }, [showGameResultModal, enablePrevent, disablePrevent]);
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -349,7 +408,6 @@ const GameRoom = () => {
 
     return (
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h4" gutterBottom>Game Room</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '800px' }}>
                 <Typography variant="h6">
                     내 필드: {isPlayer1 ? '블루' : '레드'}
@@ -373,16 +431,18 @@ const GameRoom = () => {
                 ))}
             </Box>
 
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, mt: 4 }}>
             <Button
                 variant="contained"
                 color="error"
                 size="large"
-                sx={{ mt: 4 }}
                 onClick={handleSurrender}
                 disabled={showGameResultModal} // 게임 종료 시 비활성화
             >
                 항복
             </Button>
+                <TurnTimer timeLeft={timeLeft} isMyTurn={gameInfo.currentTurnPlayerId === userInfo?.id && !showGameResultModal} />
+            </Box>
 
             <Box mt={4}>
                 <Typography variant="h6">내 카드:</Typography>
