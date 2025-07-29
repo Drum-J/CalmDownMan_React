@@ -1,11 +1,11 @@
 import Header from './Header.js';
-import {WithChildren} from "../common/WithChildren";
+import { Outlet } from "react-router-dom";
 
-export default function Layout({ children } : WithChildren) {
+export default function Layout() {
     return (
         <>
             <Header />
-            <main>{children}</main>
+            <main><Outlet /></main>
         </>
     );
 }

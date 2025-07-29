@@ -25,15 +25,8 @@ export default function Header() {
         onLogout();
     };
 
-    const onLogout = async (): Promise<void> => {
-        try {
-            const response = await api.post('/token/logout');
-            alert(response.data.data);
-            localStorage.removeItem('token');
-            navigate('/login');
-        } catch (error) {
-            console.error('로그아웃 실패:', error);
-        }
+    const onLogout = (): void => {
+        navigate('/logout');
     }
 
     return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useBlocker, useParams } from 'react-router-dom';
 import { useUser } from '../common/UserContext';
 import api from '../common/axios';
 import { ApiResponse } from '../common/ApiResponse';
@@ -54,6 +54,29 @@ const GameRoom = () => {
     const { enablePrevent, disablePrevent } = usePreventLeave(
         "페이지를 벗어나면 게임에서 패배 처리될 수 있습니다. 정말로 이동하시겠습니까?"
     );
+
+    // React Router 이탈 방지
+    const blocker = useBlocker(!showGameResultModal);
+
+    const handleConfirmNavigation = async () => {
+        if (blocker.state === 'blocked') {
+            if (userInfo && gameRoomId) {
+                try {
+                    await api.post(`/game/${gameRoomId}/surrender`, { playerId: userInfo.id });
+                } catch (error) {
+                    console.error('항복 처리 중 오류 발생 (페이지 이탈):', error);
+                }
+            }
+            disablePrevent(); // 브라우저 이탈 방지 비활성화
+            blocker.proceed();
+        }
+    };
+
+    const handleCancelNavigation = () => {
+        if (blocker.state === 'blocked') {
+            blocker.reset();
+        }
+    };
 
 
     const handleCardClick = (card: MyGameCardDto) => {
@@ -506,6 +529,12 @@ const GameRoom = () => {
                 message="정말 항복하시겠습니까?"
                 onConfirm={handleConfirmSurrender}
                 onCancel={() => setShowSurrenderConfirmModal(false)}
+            />}
+
+            {blocker.state === 'blocked' && <ConfirmModal
+                message="게임 중에 페이지를 떠나시겠습니까? 패배 처리될 수 있습니다."
+                onConfirm={handleConfirmNavigation}
+                onCancel={handleCancelNavigation}
             />}
         </Box>
     );

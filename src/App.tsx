@@ -1,6 +1,5 @@
-import './App.css'
-import {JSX} from "react";
-import {BrowserRouter, Route, Routes} from "react-router-dom";
+import './App.css';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
@@ -18,41 +17,58 @@ import MyPosts from "./pages/mypage/MyPosts";
 import MyCards from "./pages/mypage/MyCards";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
+import { UserProvider } from './common/UserContext';
 
-function App(): JSX.Element {
+import Logout from './pages/Logout';
+
+const router = createBrowserRouter([
+    {
+        path: "/login",
+        element: <Login/>,
+    },
+    {
+        path: "/signup",
+        element: <Signup/>,
+    },
+    {
+        path: "/logout", // 로그아웃 라우트 추가
+        element: <Logout />,
+    },
+    {
+        element: <RequireAuth/>, // 인증 체크
+        children: [
+            {
+                element: <Layout/>, // 레이아웃 적용
+                children: [
+                    { path: "/", element: <Home/> },
+                    { path: "/cardDex", element: <CardDex/> },
+                    { path: "/trade", element: <Trade/> },
+                    { path: "/trade/:id", element: <TradeDetail/> },
+                    { path: "/selectCards", element: <SelectCardPage/> },
+                    { path: "/trade/create", element: <TradePostCreate/> },
+                    { path: "/game/lobby", element: <GameLobby/> },
+                    { path: "/gameRoom/:gameRoomId", element: <GameRoom/> },
+                    {
+                        path: "/mypage",
+                        element: <MyPage/>,
+                        children: [
+                            { index: true, element: <MyInfo/> },
+                            { path: "cards", element: <MyCards/> },
+                            { path: "posts", element: <MyPosts/> },
+                            { path: "requests", element: <MyRequests/> },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
+]);
+
+function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/signup" element={<Signup/>}/>
-
-                <Route path={"/*"} element={
-                    <RequireAuth>
-                        <Layout>
-                            <Routes>
-                                <Route path="/" element={<Home/>}/>
-                                <Route path="/cardDex" element={<CardDex/>}/>
-                                <Route path="/trade" element={<Trade/>}/>
-                                <Route path="/trade/:id" element={<TradeDetail />} />
-                                <Route path="/selectCards" element={<SelectCardPage />} />
-                                <Route path="/trade/create" element={<TradePostCreate />} />
-                                <Route path="/game/lobby" element={<GameLobby />} />
-                                <Route path="/gameRoom/:gameRoomId" element={<GameRoom />} />
-
-                                {/* 마이페이지 라우트 설정 */}
-                                <Route path="/mypage" element={<MyPage />}>
-                                    <Route index element={<MyInfo />} />
-                                    <Route path="cards" element={<MyCards />} />
-                                    <Route path="posts" element={<MyPosts />} />
-                                    <Route path="requests" element={<MyRequests />} />
-                                </Route>
-                            </Routes>
-                        </Layout>
-                    </RequireAuth>
-                }>
-                </Route>
-            </Routes>
-        </BrowserRouter>
+        <UserProvider>
+            <RouterProvider router={router}/>
+        </UserProvider>
     );
 }
 

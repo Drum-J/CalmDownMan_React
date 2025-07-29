@@ -1,41 +1,21 @@
-import {Navigate} from "react-router-dom";
-import {WithChildren} from "../common/WithChildren";
-import {JSX, useCallback, useEffect, useState} from "react";
-import api from "../common/axios";
-import UserContext, {UserInfo} from "../common/UserContext";
+import { Navigate, Outlet } from "react-router-dom";
+import { useUser } from "../common/UserContext";
 
-export default function RequireAuth({children}: WithChildren): JSX.Element {
+export default function RequireAuth() {
     const token = localStorage.getItem("token");
-    const [userInfo, setUserInfo] = useState<UserInfo>(null);
-
-    const fetchUserInfo = useCallback(async () => {
-        try {
-            const response = await api.get('/user/myInfo');
-            setUserInfo(response.data.data);
-        } catch (error) {
-            console.error("Failed to fetch user info", error);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (token) {
-            fetchUserInfo();
-        }
-    }, [token, fetchUserInfo]);
+    const { userInfo } = useUser();
 
     if (!token) {
-        return <Navigate to="/login"/>
+        return <Navigate to="/login" replace />;
     }
 
-    // 컨텍스트를 통해 제공될 함수
-    const refreshUserInfo = async () => {
-        await fetchUserInfo();
-    };
+    // 토큰은 있지만 아직 사용자 정보가 로드되지 않은 경우 로딩 상태를 표시할 수 있습니다.
+    // 여기서는 간단히 Outlet을 렌더링하여 자식 컴포넌트가 보이도록 합니다.
+    // UserProvider가 App 최상단에서 사용자 정보를 불러오고 있습니다.
+    if (token && !userInfo) {
+        // Optional: Show a loading spinner while user info is being fetched
+        return <div>Loading user...</div>;
+    }
 
-    return (
-        <UserContext.Provider value={{userInfo, setUserInfo, refreshUserInfo}}>
-            {children}
-        </UserContext.Provider>
-    );
-
-};
+    return <Outlet />;
+}
