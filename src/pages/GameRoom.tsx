@@ -138,7 +138,7 @@ const GameRoom = () => {
         }
 
         const response = await api.post(`/game/${gameRoomId}/fieldBattle`, {
-            currentTurnPlayerId: userInfo.id,
+            playerId: userInfo.id,
         });
 
         if (response.status === 200) {
