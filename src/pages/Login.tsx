@@ -3,12 +3,14 @@ import api from "../common/axios";
 import {Link, useNavigate} from "react-router-dom";
 import {Box, Button, Paper, TextField, Typography} from "@mui/material";
 import {ApiError, ApiResponse} from "../common/ApiResponse";
+import { useUser } from "../common/UserContext";
 
 export default function Login(): JSX.Element {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { refreshUserInfo } = useUser();
 
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -24,8 +26,10 @@ export default function Login(): JSX.Element {
 
             // 토큰을 localStorage에 저장
             localStorage.setItem("token", token);
-            
-            // 로그인 후 원하는 경로로 리디렉션
+            // 사용자 정보를 강제로 새로고침하고 기다립니다.
+            await refreshUserInfo();
+
+            // 사용자 정보 로딩 후 메인 페이지로 이동합니다.
             navigate("/");
         } catch (err) {
             const error = err as ApiError;
