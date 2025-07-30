@@ -61,12 +61,16 @@ const GameRoom = () => {
     );
 
     // React Router 이탈 방지
-    const blocker = useBlocker(!showGameResultModal);
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            !showGameResultModal &&
+            currentLocation.pathname !== nextLocation.pathname
+    );
 
     useEffect(() => {
         return () => {
-            if (blocker.state === "blocked") {
-                blocker.proceed();
+            if (blocker.state === 'blocked') {
+                blocker.reset();
             }
         };
     }, [blocker]);
@@ -80,14 +84,14 @@ const GameRoom = () => {
         navigate('/');
     };
 
-    const handleConfirmNavigation = async () => {
+    const handleConfirmNavigation = () => {
         if (blocker.state === 'blocked') {
             if (userInfo && gameRoomId) {
-                try {
-                    await api.post(`/game/${gameRoomId}/surrender`, { playerId: userInfo.id });
-                } catch (error) {
-                    console.error('항복 처리 중 오류 발생 (페이지 이탈):', error);
-                }
+                // 페이지를 떠나기로 했으므로 API 호출을 기다리지 않음 (Fire and forget)
+                api.post(`/game/${gameRoomId}/surrender`, { playerId: userInfo.id })
+                    .catch(error => {
+                        console.error('항복 처리 중 오류 발생 (페이지 이탈):', error);
+                    });
             }
             disablePrevent(); // 브라우저 이탈 방지 비활성화
             blocker.proceed();
