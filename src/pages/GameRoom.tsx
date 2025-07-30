@@ -56,13 +56,12 @@ const GameRoom = () => {
     const [timeLeft, setTimeLeft] = useState(90);
     const stompClientRef = useRef<Client | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const { enablePrevent, disablePrevent } = usePreventLeave(
-        "페이지를 벗어나면 게임에서 패배 처리될 수 있습니다. 정말로 이동하시겠습니까?"
-    );
 
     // React Router 이탈 방지
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>
+            !loading && // 로딩이 완료되고
+            error === null && // 에러가 아닐 때
             !showGameResultModal &&
             currentLocation.pathname !== nextLocation.pathname
     );
@@ -76,7 +75,6 @@ const GameRoom = () => {
     }, [blocker]);
 
     const handleExitGame = async () => {
-        disablePrevent();
         if (blocker && blocker.state === 'blocked') {
             blocker.proceed();
         }
@@ -93,7 +91,6 @@ const GameRoom = () => {
                         console.error('항복 처리 중 오류 발생 (페이지 이탈):', error);
                     });
             }
-            disablePrevent(); // 브라우저 이탈 방지 비활성화
             blocker.proceed();
         }
     };
@@ -240,46 +237,6 @@ const GameRoom = () => {
     };
 
     useEffect(() => {
-        const fetchGameInfo = async () => {
-            if (!gameRoomId || !userInfo) {
-                setError('잘못된 접근입니다. 게임방 ID가 없거나 유저 정보가 없습니다.');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const response = await api.get<ApiResponse<GameInfoDto>>(`/game/${gameRoomId}`);
-
-                if (response.data.status === 200 && response.data.data) {
-                    const data = response.data.data;
-                    setGameInfo(data);
-                    setFieldCards(data.fieldCards);
-
-                    if (userInfo.id === data.player1Id) {
-                        setIsPlayer1(true);
-                    } else if (userInfo.id === data.player2Id) {
-                        setIsPlayer1(false);
-                    } else {
-                        setError("유효하지 않은 플레이어입니다.");
-                    }
-                } else {
-                    setError(response.data.message || '게임 정보를 불러오는데 실패했습니다.');
-                }
-            } catch (err) {
-                console.error('게임 정보 로딩 중 오류 발생:', err);
-                setError('게임 정보를 불러오는데 실패했습니다.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (gameRoomId && userInfo?.id) {
-            fetchGameInfo();
-        }
-    }, [gameRoomId, userInfo]);
-
-    useEffect(() => {
         // WebSocket logic
         if (gameRoomId && userInfo?.id) {
             const socket = new SockJS('http://localhost:8080/ws-connection');
@@ -290,11 +247,34 @@ const GameRoom = () => {
                     console.log('Connected to WebSocket in GameRoom');
                     stompClientRef.current = client;
 
+                    // 예외 메세지 처리
+                    client.subscribe('/topic/exception',(message) => {
+                        console.log('Exception Message Received:', message.body);
+                        setLoading(false);
+                        setError(message.body);
+                    });
+
                     // Subscribe to personal message queue
                     client.subscribe(`/queue/game/${gameRoomId}/${userInfo.id}`, (message) => {
                         const parsedMessage = JSON.parse(message.body);
                         console.log('Personal Message Received:', parsedMessage);
 
+                        // GAME INFO 메시지 처리
+                        if (parsedMessage["GAME INFO"] !== undefined) {
+                            console.log('GAME INFO:', parsedMessage["GAME INFO"]);
+                            const gameInfoData: GameInfoDto = parsedMessage["GAME INFO"];
+
+                            setGameInfo(gameInfoData);
+                            setFieldCards(gameInfoData.fieldCards);
+                            if (userInfo.id === gameInfoData.player1Id) {
+                                setIsPlayer1(true);
+                            } else if (userInfo.id === gameInfoData.player2Id) {
+                                setIsPlayer1(false);
+                            } else {
+                                setError("유효하지 않은 플레이어입니다.");
+                            }
+                            setLoading(false);
+                        }
                         // SubmitMessageDto 처리
                         if (parsedMessage.myHandCards !== undefined) { // myHandCards가 있으면 SubmitMessageDto로 간주
                             const submitMessage: SubmitMessageDto = parsedMessage;
@@ -372,6 +352,12 @@ const GameRoom = () => {
                             console.warn('알 수 없는 개인 메시지 타입:', parsedMessage);
                         }
                     });
+
+                    // 게임 정보 요청
+                    client.publish({
+                        destination: `/api/game/${gameRoomId}/info`,
+                        body: JSON.stringify({ gameRoomId: gameRoomId, playerId: userInfo.id })
+                    });
                 },
                 onStompError: (frame) => {
                     console.error('Broker reported error: ' + frame.headers['message']);
@@ -432,13 +418,10 @@ const GameRoom = () => {
     useEffect(() => {
         if (showGameResultModal) {
             if (blocker && blocker.state === 'blocked') {
-                blocker.reset();//?????
+                blocker.reset();
             }
-            disablePrevent();
-        } else {
-            enablePrevent();
         }
-    }, [showGameResultModal, enablePrevent, disablePrevent]);
+    }, [showGameResultModal]);
 
     if (loading) {
         return (
@@ -450,7 +433,18 @@ const GameRoom = () => {
     }
 
     if (error) {
-        return <Typography color="error">Error: {error}</Typography>;
+        return (
+            <Box>
+                <Typography color="error">Error: {error}</Typography>
+                <Button
+                    onClick={() => navigate('/')}
+                    variant="contained"
+                    color="primary"
+                >
+                    메인으로 돌아가기
+                </Button>
+            </Box>
+        );
     }
 
     if (!gameInfo) {
