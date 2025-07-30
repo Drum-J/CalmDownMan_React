@@ -1,20 +1,18 @@
 import { Box, Button, Typography } from "@mui/material";
 import './Modal.css';
-import { useNavigate } from "react-router-dom";
 import { useUser } from "../common/UserContext";
 
 interface GameResultModalProps {
     winnerId: number | null;
     myPlayerId: number;
+    onExitGame: () => void; // 새로 추가된 콜백 함수
 }
 
-const GameResultModal = ({ winnerId, myPlayerId }: GameResultModalProps) => {
-    const navigate = useNavigate();
+const GameResultModal = ({ winnerId, myPlayerId, onExitGame }: GameResultModalProps) => {
     const { refreshUserInfo } = useUser();
 
     const handleGoToLobby = async () => {
-        await refreshUserInfo();
-        navigate('/');
+        onExitGame(); // 부모로부터 받은 콜백 함수 호출
     };
 
     const getResultMessage = () => {

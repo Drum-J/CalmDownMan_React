@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useBlocker, useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useBlocker, useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../common/UserContext';
 import api from '../common/axios';
 import { ApiResponse } from '../common/ApiResponse';
@@ -19,14 +19,14 @@ import BattleModal from '../modal/BattleModal';
 import GameResultModal from '../modal/GameResultModal';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
-import { useRef } from 'react';
 import ConfirmModal from "../modal/ConfirmModal";
 import TurnTimer from "../components/game/modules/TurnTimer";
 import usePreventLeave from "../hooks/usePreventLeave";
 
 const GameRoom = () => {
     const { gameRoomId } = useParams<{ gameRoomId: string }>();
-    const { userInfo } = useUser();
+    const { userInfo, refreshUserInfo } = useUser();
+    const navigate = useNavigate();
     const [gameInfo, setGameInfo] = useState<GameInfoDto | null>(null);
     const [isPlayer1, setIsPlayer1] = useState<boolean>(false);
     const [fieldCards, setFieldCards] = useState<Record<number, FieldCardDto | null>>(() => {
@@ -36,6 +36,11 @@ const GameRoom = () => {
         }
         return initialFields;
     });
+    const fieldCardsRef = useRef(fieldCards);
+
+    useEffect(() => {
+        fieldCardsRef.current = fieldCards;
+    }, [fieldCards]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [showCardDetailModal, setShowCardDetailModal] = useState<boolean>(false);
@@ -57,6 +62,23 @@ const GameRoom = () => {
 
     // React Router 이탈 방지
     const blocker = useBlocker(!showGameResultModal);
+
+    useEffect(() => {
+        return () => {
+            if (blocker.state === "blocked") {
+                blocker.proceed();
+            }
+        };
+    }, [blocker]);
+
+    const handleExitGame = async () => {
+        disablePrevent();
+        if (blocker && blocker.state === 'blocked') {
+            blocker.proceed();
+        }
+        await refreshUserInfo();
+        navigate('/');
+    };
 
     const handleConfirmNavigation = async () => {
         if (blocker.state === 'blocked') {
@@ -117,7 +139,8 @@ const GameRoom = () => {
             return;
         }
 
-        const fieldCardCount = Object.values(fieldCards).filter(card => card !== null).length;
+        const fieldCardCount = Object.values(fieldCardsRef.current).filter(card => card !== null).length;
+        console.log(fieldCardCount);
         if (fieldCardCount >= 6) {
             alert('필드가 가득 찼습니다. 더 이상 카드를 제출할 수 없습니다.');
             return;
@@ -404,6 +427,9 @@ const GameRoom = () => {
 
     useEffect(() => {
         if (showGameResultModal) {
+            if (blocker && blocker.state === 'blocked') {
+                blocker.reset();//?????
+            }
             disablePrevent();
         } else {
             enablePrevent();
@@ -522,6 +548,7 @@ const GameRoom = () => {
                 <GameResultModal
                     winnerId={gameWinnerId}
                     myPlayerId={userInfo?.id || 0}
+                    onExitGame={handleExitGame}
                 />
             )}
 
