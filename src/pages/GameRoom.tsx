@@ -146,7 +146,6 @@ const GameRoom = () => {
         }
 
         const fieldCardCount = Object.values(fieldCardsRef.current).filter(card => card !== null).length;
-        console.log(fieldCardCount);
         if (fieldCardCount >= 6) {
             alert('필드가 가득 찼습니다. 더 이상 카드를 제출할 수 없습니다.');
             return;
@@ -159,7 +158,6 @@ const GameRoom = () => {
             });
 
             if (response.data.status === 200) {
-                console.log(`카드 ${gameCardId} 제출 성공!`);
             } else {
                 console.error('카드 제출 실패:', response.data.message);
                 alert(`카드 제출 실패: ${response.data.message}`);
@@ -180,7 +178,6 @@ const GameRoom = () => {
             return;
         }
         try {
-            console.log("surrender ", userInfo.id);
             await api.post(`/game/${gameRoomId}/surrender`, { playerId: userInfo.id });
             // 성공 시 별도 처리 없음. WebSocket을 통해 결과가 전달될 것임.
         } catch (error) {
@@ -208,7 +205,6 @@ const GameRoom = () => {
         });
 
         if (response.status === 200) {
-            console.log('배틀 요청 성공!');
             // 배틀 결과는 WebSocket을 통해 BattleMessageDto로 수신됩니다.
         } else {
             console.error('배틀 요청 실패:', response.data.message);
@@ -229,7 +225,6 @@ const GameRoom = () => {
             });
 
             if (response.status === 200) {
-                console.log('배틀 요청 성공!');
                 // 배틀 결과는 WebSocket을 통해 BattleMessageDto로 수신됩니다.
             } else {
                 console.error('배틀 요청 실패:', response.data.message);
@@ -270,7 +265,6 @@ const GameRoom = () => {
                     // 쌓여있던 메시지 처리
                     while (messageQueueRef.current.length > 0) {
                         const queuedMessage = messageQueueRef.current.shift();
-                        console.log("Processing queued message:", queuedMessage);
                         processMessage(queuedMessage);
                     }
                 }
@@ -294,7 +288,6 @@ const GameRoom = () => {
                         setGameWinnerId(submitMessage.gameWinnerId);
                         setShowGameResultModal(true);
                     } else if (submitMessage.battleCardDto) {
-                        console.log('배틀 발생!', submitMessage.battleCardDto);
                         setIsBattleInProgress(true); // 배틀 시작
                         setShowBattleModal(true); // 배틀 모달 열기
                         setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
@@ -334,7 +327,6 @@ const GameRoom = () => {
                         setBattleCard2ImageUrl(battleMessage.card2Image);
                     }
 
-                    console.log('배틀 결과:', battleMessage.winnerId);
                     setBattleResultWinnerId(battleMessage.winnerId); // 배틀 결과 승자 ID 저장
                     // 배틀 종료는 isBattleInProgress가 false로 변경될 때 모달이 닫히도록 처리
                     setIsBattleInProgress(false); // 배틀 종료
@@ -366,7 +358,6 @@ const GameRoom = () => {
                 // 예외 메세지 처리
                 else if (parsedMessage.message === 'ERROR') {
                     // 예외 메세지 처리
-                    console.log('Exception Message Received:', parsedMessage.data);
                     setLoading(false);
                     setError(parsedMessage.data);
                 }
@@ -387,10 +378,7 @@ const GameRoom = () => {
                     // Subscribe to personal message queue
                     client.subscribe(`/queue/game/${gameRoomId}/${userInfo.id}`, (message) => {
                         const parsedMessage = JSON.parse(message.body);
-                        console.log('Personal Message Received:', parsedMessage);
-
                         if (isPausedRef.current && (parsedMessage.message !== 'RECONNECT' && parsedMessage.message !== 'GAME INFO')) {
-                            console.log("Queueing message because the game is paused:", parsedMessage);
                             messageQueueRef.current.push(parsedMessage);
                         } else {
                             processMessage(parsedMessage);
