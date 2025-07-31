@@ -82,25 +82,41 @@ export default function SelectCardPage() {
         'gameReady': { title: '게임에 사용할 카드 선택', submitButton: '선택 완료' }
     };
 
-    useEffect(() => {
-        const fetchMyCards = async () => {
-            setLoading(true);
-            try {
-                const response = await api.get<ApiResponse<MyCardDetailDto[]>>('/card/mine');
-                setMyCards(response.data.data);
-                const initialSelection: SelectedCards = {};
-                response.data.data.forEach(card => {
-                    initialSelection[card.id] = 0;
-                });
-                setSelectedCards(initialSelection);
-            } catch (error) {
-                console.error('내 카드 정보를 불러오는데 실패했습니다:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchMyCards = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get<ApiResponse<MyCardDetailDto[]>>('/card/mine');
+            setMyCards(response.data.data);
+            const initialSelection: SelectedCards = {};
+            response.data.data.forEach(card => {
+                initialSelection[card.id] = 0;
+            });
+            setSelectedCards(initialSelection);
+        } catch (error) {
+            console.error('내 카드 정보를 불러오는데 실패했습니다:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        if (purpose) fetchMyCards();
+    const checkGame = async () => {
+        const response = await api.get(`/game/check/${userInfo.id}`);
+        const gameRoomId = response.data.data;
+
+        if (gameRoomId) {
+            alert("진행 중인 게임이 존재합니다. 게임에 재접속 합니다.");
+            navigate(`/gameRoom/${gameRoomId}`);
+        } else {
+            fetchMyCards();
+        }
+    };
+
+    useEffect(() => {
+        if (purpose === 'gameReady') {
+            checkGame();
+        } else {
+            fetchMyCards();
+        }
     }, [purpose]);
 
     // 필터 옵션을 myCards 데이터로부터 동적으로 생성
