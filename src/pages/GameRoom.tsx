@@ -466,6 +466,7 @@ const GameRoom = () => {
                         api.post(`/game/${gameRoomId}/timeout`, { playerId: userInfo.id })
                             .catch(err => alert("Timeout processing error:" + err.data.data));
                         setShowOpponentDisconnectModal(false);
+                        setIsPaused(false); // 일시정지 상태 해제
                         return 0;
                     }
                     return prevTime - 1;
