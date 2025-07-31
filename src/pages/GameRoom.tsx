@@ -20,6 +20,7 @@ import GameResultModal from '../modal/GameResultModal';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import ConfirmModal from "../modal/ConfirmModal";
+import OpponentDisconnectModal from "../modal/OpponentDisconnectModal";
 import TurnTimer from "../components/game/modules/TurnTimer";
 import usePreventLeave from "../hooks/usePreventLeave";
 
@@ -53,9 +54,13 @@ const GameRoom = () => {
     const [showGameResultModal, setShowGameResultModal] = useState<boolean>(false);
     const [gameWinnerId, setGameWinnerId] = useState<number | null>(null);
     const [showSurrenderConfirmModal, setShowSurrenderConfirmModal] = useState<boolean>(false);
+    const [showOpponentDisconnectModal, setShowOpponentDisconnectModal] = useState<boolean>(false);
+    const [opponentDisconnectTimeLeft, setOpponentDisconnectTimeLeft] = useState<number>(60);
     const [timeLeft, setTimeLeft] = useState(90);
     const stompClientRef = useRef<Client | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [isPaused, setIsPaused] = useState<boolean>(false);
+    const messageQueueRef = useRef<any[]>([]);
 
     // React Router 이탈 방지
     const blocker = useBlocker(
@@ -236,9 +241,141 @@ const GameRoom = () => {
         }
     };
 
+    const isPausedRef = useRef(isPaused);
+    useEffect(() => {
+        isPausedRef.current = isPaused;
+    }, [isPaused]);
+
     useEffect(() => {
         // WebSocket logic
         if (gameRoomId && userInfo?.id) {
+            const processMessage = (parsedMessage: any) => {
+                // GAME INFO 메시지 처리
+                if (parsedMessage.message === "GAME INFO") {
+                    const gameInfoData: GameInfoDto = parsedMessage.data;
+
+                    setGameInfo(gameInfoData);
+                    setFieldCards(gameInfoData.fieldCards);
+                    if (userInfo.id === gameInfoData.player1Id) {
+                        setIsPlayer1(true);
+                    } else if (userInfo.id === gameInfoData.player2Id) {
+                        setIsPlayer1(false);
+                    } else {
+                        setError("유효하지 않은 플레이어입니다.");
+                    }
+                    setLoading(false);
+
+                    // 메시지 큐 처리 재개
+                    setIsPaused(false);
+                    // 쌓여있던 메시지 처리
+                    while (messageQueueRef.current.length > 0) {
+                        const queuedMessage = messageQueueRef.current.shift();
+                        console.log("Processing queued message:", queuedMessage);
+                        processMessage(queuedMessage);
+                    }
+                }
+                // SubmitMessageDto 처리
+                else if (parsedMessage.myHandCards !== undefined) { // myHandCards가 있으면 SubmitMessageDto로 간주
+                    const submitMessage: SubmitMessageDto = parsedMessage;
+                    setFieldCards(submitMessage.fieldCards);
+                    setGameInfo(prevGameInfo => {
+                        if (!prevGameInfo) return null;
+                        let updatedMyCards = prevGameInfo.myCards; // 기본적으로 기존 손패 유지
+                        if (submitMessage.myHandCards !== null) { // myHandCards가 null이 아닐 때만 업데이트
+                            updatedMyCards = submitMessage.myHandCards;
+                        }
+                        return {
+                            ...prevGameInfo,
+                            myCards: updatedMyCards, // 조건부로 업데이트된 손패 사용
+                            currentTurnPlayerId: submitMessage.currentTurnPlayerId,
+                        };
+                    });
+                    if (submitMessage.gameWinnerId !== null) { // 카드 제출 후 모든 필드를 차지한 경우
+                        setGameWinnerId(submitMessage.gameWinnerId);
+                        setShowGameResultModal(true);
+                    } else if (submitMessage.battleCardDto) {
+                        console.log('배틀 발생!', submitMessage.battleCardDto);
+                        setIsBattleInProgress(true); // 배틀 시작
+                        setShowBattleModal(true); // 배틀 모달 열기
+                        setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
+
+                        // 필드 카드에서 이미지 URL 가져오기
+                        const card1 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId1);
+                        const card2 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId2);
+
+                        setBattleCard1ImageUrl(card1?.imageUrl || null);
+                        setBattleCard2ImageUrl(card2?.imageUrl || null);
+
+                        // 현재 턴 플레이어만 배틀 API를 호출하도록 조건 추가
+                        if (userInfo?.id === submitMessage.currentTurnPlayerId) {
+                            handleBattle(submitMessage.battleCardDto); // 배틀 API 호출
+                        }
+                    }
+                }
+                // BattleMessageDto 처리
+                else if (parsedMessage.winnerId !== undefined) { // winnerId가 있으면 BattleMessageDto로 간주
+                    const battleMessage: BattleMessageDto = parsedMessage;
+                    setFieldCards(battleMessage.fieldCards);
+                    setGameInfo(prevGameInfo => {
+                        if (!prevGameInfo) return null;
+                        return {
+                            ...prevGameInfo,
+                            currentTurnPlayerId: battleMessage.currentTurnPlayerId,
+                        };
+                    });
+                    setGameWinnerId(battleMessage.gameWinnerId);
+                    // 필드 배틀 진행 시 배틀 모달 처리
+                    if (battleMessage.card1Image !== null && battleMessage.card2Image !== null) {
+                        setIsBattleInProgress(true); // 배틀 시작
+                        setShowBattleModal(true); // 배틀 모달 열기
+                        setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
+
+                        setBattleCard1ImageUrl(battleMessage.card1Image);
+                        setBattleCard2ImageUrl(battleMessage.card2Image);
+                    }
+
+                    console.log('배틀 결과:', battleMessage.winnerId);
+                    setBattleResultWinnerId(battleMessage.winnerId); // 배틀 결과 승자 ID 저장
+                    // 배틀 종료는 isBattleInProgress가 false로 변경될 때 모달이 닫히도록 처리
+                    setIsBattleInProgress(false); // 배틀 종료
+                }
+                // SurrenderMessageDto 처리
+                else if(parsedMessage.message === "SURRENDER") {
+                    const surrenderMessage: SurrenderMessageDto = parsedMessage;
+                    setGameWinnerId(surrenderMessage.gameWinnerId);
+                    setShowGameResultModal(true);
+                }
+                // 상대 플레이어 연결 끊김 처리
+                else if(parsedMessage.message === 'DISCONNECT' ){
+                    setShowOpponentDisconnectModal(true);
+                    setOpponentDisconnectTimeLeft(60); // 60초부터 카운트다운 시작
+                    setIsPaused(true); // 메시지 처리 일시 중지
+                }
+                // 상대 플레이어 재연결 처리
+                else if (parsedMessage.message === 'RECONNECT') {
+                    setShowOpponentDisconnectModal(false); // 모달 닫기
+                    setLoading(true); // 로딩 상태로 변경
+                    // 게임 정보 다시 요청
+                    if (stompClientRef.current && stompClientRef.current.connected) {
+                        stompClientRef.current.publish({
+                            destination: `/api/game/${gameRoomId}/info`,
+                            body: JSON.stringify({ gameRoomId: gameRoomId, playerId: userInfo.id })
+                        });
+                    }
+                }
+                // 예외 메세지 처리
+                else if (parsedMessage.message === 'ERROR') {
+                    // 예외 메세지 처리
+                    console.log('Exception Message Received:', parsedMessage.data);
+                    setLoading(false);
+                    setError(parsedMessage.data);
+                }
+                // 기타 메시지 타입 처리 (필요하다면)
+                else {
+                    console.warn('알 수 없는 개인 메시지 타입:', parsedMessage);
+                }
+            };
+
             const socket = new SockJS('http://localhost:8080/ws-connection');
             const client = new Client({
                 webSocketFactory: () => socket,
@@ -247,109 +384,16 @@ const GameRoom = () => {
                     console.log('Connected to WebSocket in GameRoom');
                     stompClientRef.current = client;
 
-                    // 예외 메세지 처리
-                    client.subscribe('/topic/exception',(message) => {
-                        console.log('Exception Message Received:', message.body);
-                        setLoading(false);
-                        setError(message.body);
-                    });
-
                     // Subscribe to personal message queue
                     client.subscribe(`/queue/game/${gameRoomId}/${userInfo.id}`, (message) => {
                         const parsedMessage = JSON.parse(message.body);
                         console.log('Personal Message Received:', parsedMessage);
 
-                        // GAME INFO 메시지 처리
-                        if (parsedMessage["GAME INFO"] !== undefined) {
-                            console.log('GAME INFO:', parsedMessage["GAME INFO"]);
-                            const gameInfoData: GameInfoDto = parsedMessage["GAME INFO"];
-
-                            setGameInfo(gameInfoData);
-                            setFieldCards(gameInfoData.fieldCards);
-                            if (userInfo.id === gameInfoData.player1Id) {
-                                setIsPlayer1(true);
-                            } else if (userInfo.id === gameInfoData.player2Id) {
-                                setIsPlayer1(false);
-                            } else {
-                                setError("유효하지 않은 플레이어입니다.");
-                            }
-                            setLoading(false);
-                        }
-                        // SubmitMessageDto 처리
-                        if (parsedMessage.myHandCards !== undefined) { // myHandCards가 있으면 SubmitMessageDto로 간주
-                            const submitMessage: SubmitMessageDto = parsedMessage;
-                            setFieldCards(submitMessage.fieldCards);
-                            setGameInfo(prevGameInfo => {
-                                if (!prevGameInfo) return null;
-                                let updatedMyCards = prevGameInfo.myCards; // 기본적으로 기존 손패 유지
-                                if (submitMessage.myHandCards !== null) { // myHandCards가 null이 아닐 때만 업데이트
-                                    updatedMyCards = submitMessage.myHandCards;
-                                }
-                                return {
-                                    ...prevGameInfo,
-                                    myCards: updatedMyCards, // 조건부로 업데이트된 손패 사용
-                                    currentTurnPlayerId: submitMessage.currentTurnPlayerId,
-                                };
-                            });
-                            if (submitMessage.gameWinnerId !== null) { // 카드 제출 후 모든 필드를 차지한 경우
-                                setGameWinnerId(submitMessage.gameWinnerId);
-                                setShowGameResultModal(true);
-                            } else if (submitMessage.battleCardDto) {
-                                console.log('배틀 발생!', submitMessage.battleCardDto);
-                                setIsBattleInProgress(true); // 배틀 시작
-                                setShowBattleModal(true); // 배틀 모달 열기
-                                setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
-
-                                // 필드 카드에서 이미지 URL 가져오기
-                                const card1 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId1);
-                                const card2 = Object.values(submitMessage.fieldCards).find(card => card?.gameCardId === submitMessage.battleCardDto?.gameCardId2);
-
-                                setBattleCard1ImageUrl(card1?.imageUrl || null);
-                                setBattleCard2ImageUrl(card2?.imageUrl || null);
-
-                                // 현재 턴 플레이어만 배틀 API를 호출하도록 조건 추가
-                                if (userInfo?.id === submitMessage.currentTurnPlayerId) {
-                                    handleBattle(submitMessage.battleCardDto); // 배틀 API 호출
-                                }
-                            }
-                        } 
-                        // BattleMessageDto 처리
-                        else if (parsedMessage.winnerId !== undefined) { // winnerId가 있으면 BattleMessageDto로 간주
-                            const battleMessage: BattleMessageDto = parsedMessage;
-                            setFieldCards(battleMessage.fieldCards);
-                            setGameInfo(prevGameInfo => {
-                                if (!prevGameInfo) return null;
-                                return {
-                                    ...prevGameInfo,
-                                    currentTurnPlayerId: battleMessage.currentTurnPlayerId,
-                                };
-                            });
-                            setGameWinnerId(battleMessage.gameWinnerId);
-                            // 필드 배틀 진행 시 배틀 모달 처리
-                            if (battleMessage.card1Image !== null && battleMessage.card2Image !== null) {
-                                setIsBattleInProgress(true); // 배틀 시작
-                                setShowBattleModal(true); // 배틀 모달 열기
-                                setBattleResultWinnerId(null); // 이전 배틀 결과 초기화
-
-                                setBattleCard1ImageUrl(battleMessage.card1Image);
-                                setBattleCard2ImageUrl(battleMessage.card2Image);
-                            }
-
-                            console.log('배틀 결과:', battleMessage.winnerId);
-                            setBattleResultWinnerId(battleMessage.winnerId); // 배틀 결과 승자 ID 저장
-                            // 배틀 종료는 isBattleInProgress가 false로 변경될 때 모달이 닫히도록 처리
-                            setIsBattleInProgress(false); // 배틀 종료
-                            // TODO: 배틀 결과 UI 처리
-                        }
-                        // SurrenderMessageDto 처리
-                        else if(parsedMessage.message === "SURRENDER") {
-                            const surrenderMessage: SurrenderMessageDto = parsedMessage;
-                            setGameWinnerId(surrenderMessage.gameWinnerId);
-                            setShowGameResultModal(true);
-                        }
-                        // 기타 메시지 타입 처리 (필요하다면)
-                        else {
-                            console.warn('알 수 없는 개인 메시지 타입:', parsedMessage);
+                        if (isPausedRef.current && (parsedMessage.message !== 'RECONNECT' && parsedMessage.message !== 'GAME INFO')) {
+                            console.log("Queueing message because the game is paused:", parsedMessage);
+                            messageQueueRef.current.push(parsedMessage);
+                        } else {
+                            processMessage(parsedMessage);
                         }
                     });
 
@@ -386,7 +430,7 @@ const GameRoom = () => {
             timerRef.current = null;
         }
 
-        if (isMyTurn && !showGameResultModal) {
+        if (isMyTurn && !showGameResultModal && !showOpponentDisconnectModal) {
             setTimeLeft(90);
 
             timerRef.current = setInterval(() => {
@@ -413,7 +457,7 @@ const GameRoom = () => {
                 clearInterval(timerRef.current);
             }
         };
-    }, [gameInfo?.currentTurnPlayerId, userInfo?.id, showGameResultModal]);
+    }, [gameInfo?.currentTurnPlayerId, userInfo?.id, showGameResultModal, showOpponentDisconnectModal]);
 
     useEffect(() => {
         if (showGameResultModal) {
@@ -422,6 +466,31 @@ const GameRoom = () => {
             }
         }
     }, [showGameResultModal]);
+
+    useEffect(() => {
+        let disconnectTimer: NodeJS.Timeout | null = null;
+        if (showOpponentDisconnectModal) {
+            disconnectTimer = setInterval(() => {
+                setOpponentDisconnectTimeLeft(prevTime => {
+                    if (prevTime <= 1) {
+                        clearInterval(disconnectTimer!);
+                        // 60초 경과 시, 현재 플레이어의 승리를 서버에 알림
+                        api.post(`/game/${gameRoomId}/timeout`, { playerId: userInfo.id })
+                            .catch(err => alert("Timeout processing error:" + err.data.data));
+                        setShowOpponentDisconnectModal(false);
+                        return 0;
+                    }
+                    return prevTime - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (disconnectTimer) {
+                clearInterval(disconnectTimer);
+            }
+        };
+    }, [showOpponentDisconnectModal]);
 
     if (loading) {
         return (
@@ -560,6 +629,11 @@ const GameRoom = () => {
                 message="게임 중에 페이지를 떠나시겠습니까? 패배 처리될 수 있습니다."
                 onConfirm={handleConfirmNavigation}
                 onCancel={handleCancelNavigation}
+            />}
+
+            {showOpponentDisconnectModal && <OpponentDisconnectModal
+                open={showOpponentDisconnectModal}
+                timeLeft={opponentDisconnectTimeLeft}
             />}
         </Box>
     );
