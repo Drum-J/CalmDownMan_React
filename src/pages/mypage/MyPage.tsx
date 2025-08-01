@@ -7,6 +7,7 @@ const menuItems = [
     { text: '내가 가진 카드', path: '/mypage/cards' },
     { text: '내가 쓴 글', path: '/mypage/posts' },
     { text: '내가 신청한 글', path: '/mypage/requests' },
+    { text: '게임 전적', path: '/mypage/gameRecords'}
 ];
 
 export default function MyPage() {

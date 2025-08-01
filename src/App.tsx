@@ -15,6 +15,7 @@ import MyRequests from "./pages/mypage/MyRequests";
 import MyInfo from "./pages/mypage/MyInfo";
 import MyPosts from "./pages/mypage/MyPosts";
 import MyCards from "./pages/mypage/MyCards";
+import GameRecords from "./pages/mypage/GameRecords";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
 import { UserProvider } from './common/UserContext';
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
                             { path: "cards", element: <MyCards/> },
                             { path: "posts", element: <MyPosts/> },
                             { path: "requests", element: <MyRequests/> },
+                            { path: "gameRecords", element: <GameRecords/> },
                         ],
                     },
                 ],

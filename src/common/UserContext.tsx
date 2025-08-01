@@ -9,6 +9,9 @@ export interface UserInfo {
     profileImage: string;
     point: number;
     rankScore: number;
+    winCount: number;
+    loseCount: number;
+    drawCount: number;
 }
 
 interface UserContextType {

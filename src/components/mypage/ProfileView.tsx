@@ -28,6 +28,9 @@ export default function ProfileView({ userInfo, onEditClick }: ProfileViewProps)
             <Typography variant="body1" sx={{ mb: 2 }}>
                 랭크 점수: {userInfo.rankScore}점
             </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+                {userInfo.winCount}승 | {userInfo.drawCount}무 | {userInfo.loseCount}패
+            </Typography>
             <Button
                 variant="contained"
                 onClick={onEditClick}
