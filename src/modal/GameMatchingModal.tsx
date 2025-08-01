@@ -36,6 +36,9 @@ const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalPr
             const client = new Client({
                     webSocketFactory: () => socket,
                     reconnectDelay: 5000,
+                    connectHeaders: {
+                        'playerId': userInfo.id.toString()
+                    },
                     onConnect: async () => { // onConnect를 async 함수로 변경
                         console.log('Connected to WebSocket for matching result');
                         stompClientRef.current = client;
@@ -150,7 +153,6 @@ const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalPr
         } catch (error) {
             console.error('매칭 취소 중 오류 발생:', error);
             setMessage('매칭 취소 중 오류가 발생했습니다. 다시 시도해주세요.');
-            setStatus('error'); // 취소 실패 시 에러 상태로 전환
         }
     };
 
@@ -206,6 +208,17 @@ const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalPr
                             color="primary"
                         >
                             닫기
+                        </Button>
+                    </Stack>
+                )}
+                {status === 'cancelling' && (
+                    <Stack spacing={2} direction="row" justifyContent="center" sx={{ mt: 3 }}>
+                        <Button
+                            onClick={handleCancelMatching}
+                            variant="contained"
+                            color="secondary"
+                        >
+                            매칭 취소
                         </Button>
                     </Stack>
                 )}
