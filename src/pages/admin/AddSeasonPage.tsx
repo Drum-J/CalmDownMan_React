@@ -63,24 +63,23 @@ export default function AddSeasonPage() {
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto' }}>
+        <Box component="form" onSubmit={handleSubmit}>
             <Typography variant="h5" gutterBottom>새 시즌 추가</Typography>
             
             <Paper 
                 variant="outlined"
                 onClick={() => fileInputRef.current?.click()}
                 sx={{
-                    height: 300,
+                    width: 400,
+                    height: 400,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
                     backgroundImage: `url(${imagePreview})`,
-                    backgroundSize: 'cover',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',
-                    bgcolor: 'grey.100',
-                    color: 'grey.500',
-                    position: 'relative'
                 }}
             >
                 {!imagePreview && (

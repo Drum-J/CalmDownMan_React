@@ -16,7 +16,6 @@ export default function CardManagement() {
     const [seasons, setSeasons] = useState<Season[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchSeasons = async () => {
@@ -92,20 +91,13 @@ export default function CardManagement() {
                             backgroundColor: 'grey.100'
                         }
                     }}
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleAddSeasonClick}
                 >
                     <IconButton color="primary" sx={{ width: 80, height: 80 }}>
                         <AddIcon sx={{ fontSize: 50 }} />
                     </IconButton>
                 </Paper>
             </Box>
-
-            {isModalOpen &&
-                <AlertModal
-                    onClick={handleAddSeasonClick}
-                    message="새 시즌을 추가하시겠습니까?"
-                />
-            }
         </Box>
     );
 }
