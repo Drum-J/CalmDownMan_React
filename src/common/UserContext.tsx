@@ -12,6 +12,7 @@ export interface UserInfo {
     winCount: number;
     loseCount: number;
     drawCount: number;
+    role: string;
 }
 
 interface UserContextType {

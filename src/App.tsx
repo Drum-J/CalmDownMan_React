@@ -22,6 +22,13 @@ import { UserProvider } from './common/UserContext';
 
 import Logout from './pages/Logout';
 
+import AdminLayout from "./layout/admin/AdminLayout";
+import RequireAdmin from "./components/RequireAdmin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import CardManagement from "./pages/admin/CardManagement";
+import AddSeasonPage from "./pages/admin/AddSeasonPage";
+
 const router = createBrowserRouter([
     {
         path: "/login",
@@ -62,6 +69,21 @@ const router = createBrowserRouter([
                     },
                 ],
             },
+            {
+                path: "/admin",
+                element: <RequireAdmin />,
+                children: [
+                    {
+                        element: <AdminLayout />,
+                        children: [
+                            { path: "dashboard", element: <AdminDashboard /> },
+                            { path: "users", element: <UserManagement /> },
+                            { path: "cards", element: <CardManagement /> },
+                            { path: "cards/addSeason", element: <AddSeasonPage /> },
+                        ]
+                    }
+                ]
+            }
         ],
     },
 ]);

@@ -2,9 +2,10 @@ import './Header.css';
 import {Box, Menu, MenuItem, Stack, Typography} from "@mui/material";
 import {Link, useNavigate} from "react-router-dom";
 import {useState, MouseEvent} from "react";
-import api from "../common/axios";
 import CloseIcon from "@mui/icons-material/Close";
 import {useUser} from "../common/UserContext";
+
+import {AdminPanelSettings} from "@mui/icons-material";
 
 export default function Header() {
     const { userInfo } = useUser();
@@ -24,6 +25,11 @@ export default function Header() {
         handleClose();
         onLogout();
     };
+
+    const handleGoToAdmin = (): void => {
+        handleClose();
+        navigate('/admin/dashboard');
+    }
 
     const onLogout = (): void => {
         navigate('/logout');
@@ -63,6 +69,12 @@ export default function Header() {
                         horizontal: 'right',
                     }}
                 >
+                    {userInfo?.role === 'ADMIN' && (
+                        <MenuItem onClick={handleGoToAdmin}>
+                            <AdminPanelSettings />
+                            관리자 페이지
+                        </MenuItem>
+                    )}
                     <MenuItem onClick={handleLogout}>
                         <CloseIcon />
                         로그아웃
