@@ -4,6 +4,7 @@ import { Box, Typography, TextField, Button, Paper, CircularProgress, Select, Me
 import { PhotoCamera } from '@mui/icons-material';
 import api from '../../common/axios';
 import AlertModal from '../../modal/AlertModal';
+import { Card } from '../../components/card/dto';
 
 const attackTypeOptions = [
     { value: 'ROCK', label: '바위' },
@@ -21,9 +22,9 @@ const gradeOptions = [
     { value: 'V', label: 'V' },
 ];
 
-export default function AddCardPage() {
+export default function EditCardPage() {
     const { state } = useLocation();
-    const seasonId = state?.seasonId;
+    const { seasonId, cardId } = state || {}; // state가 null일 경우를 대비
     const navigate = useNavigate();
 
     const [title, setTitle] = useState('');
@@ -34,16 +35,38 @@ export default function AddCardPage() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isInvalidAccess, setIsInvalidAccess] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (!seasonId) {
+        if (!seasonId || !cardId) {
             setIsInvalidAccess(true);
+            return;
         }
-    }, [seasonId]);
+
+        const fetchCardData = async () => {
+            try {
+                const response = await api.get<{ data: Card }>(`/card/${cardId}`);
+                const card = response.data.data;
+                setTitle(card.title);
+                setPower(card.power);
+                // 백엔드에서 넘어오는 attackType(표시 값)을 enum 값으로 매핑
+                const mappedAttackType = attackTypeOptions.find(opt => opt.label === card.attackType)?.value || '';
+                setAttackType(mappedAttackType);
+                setGrade(card.grade);
+                setImagePreview(card.imageUrl);
+            } catch (err) {
+                console.error("카드 정보를 불러오는 데 실패했습니다:", err);
+                setError("카드 정보를 불러올 수 없습니다.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCardData();
+    }, [cardId, seasonId]);
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -57,8 +80,8 @@ export default function AddCardPage() {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!title || !attackType || !grade || !cardImage || !seasonId) {
-            setError('모든 필드를 입력해주세요.');
+        if (!title || !attackType || !grade || !seasonId) {
+            setError('필수 필드를 모두 입력해주세요.');
             return;
         }
 
@@ -66,19 +89,22 @@ export default function AddCardPage() {
         setError(null);
 
         const formData = new FormData();
+        formData.append("id", cardId);
         formData.append('title', title);
         formData.append('power', String(power));
         formData.append('attackType', attackType);
         formData.append('grade', grade);
         formData.append('cardSeasonId', seasonId);
-        formData.append('cardImage', cardImage);
+        if (cardImage) { // 이미지가 변경된 경우에만 추가
+            formData.append('cardImage', cardImage);
+        }
 
         try {
-            await api.post('/admin/card', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            await api.put(`/admin/card`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
             setIsSuccessModalOpen(true);
         } catch (err) {
-            console.error("카드 등록 실패:", err);
-            setError('카드 등록에 실패했습니다. 다시 시도해주세요.');
+            console.error("카드 수정 실패:", err);
+            setError('카드 수정에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setIsSubmitting(false);
         }
@@ -98,36 +124,33 @@ export default function AddCardPage() {
         );
     }
 
-    return (
-        <Box component="form" onSubmit={handleSubmit}>
-            <Typography variant="h4" gutterBottom>새 카드 추가</Typography>
+    if (isLoading) {
+        return <CircularProgress />;
+    }
 
-            <Box
+    return (
+        <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
+            <Typography variant="h5" gutterBottom>카드 정보 수정</Typography>
+
+            <Paper 
+                variant="outlined"
+                onClick={() => fileInputRef.current?.click()}
                 sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
+                    height: 350,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', backgroundImage: `url(${imagePreview})`,
+                    backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
+                    mb: 2
                 }}
             >
-                <Paper
-                    variant="outlined"
-                    onClick={() => fileInputRef.current?.click()}
-                    sx={{
-                        width: 240,
-                        height: 350,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', backgroundImage: `url(${imagePreview})`,
-                        backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-                    }}
-                >
-                    {!imagePreview && (
-                        <Box sx={{textAlign: 'center'}}>
-                            <PhotoCamera sx={{ fontSize: 40 }} />
-                            <Typography>카드 이미지 선택</Typography>
-                        </Box>
-                    )}
-                </Paper>
-                <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageChange} />
-            </Box>
+                {!imagePreview && (
+                    <Box sx={{textAlign: 'center'}}>
+                        <PhotoCamera sx={{ fontSize: 40 }} />
+                        <Typography>새 이미지 선택</Typography>
+                    </Box>
+                )}
+            </Paper>
+            <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageChange} />
 
             <TextField label="카드 이름" value={title} onChange={(e) => setTitle(e.target.value)} fullWidth required margin="normal" />
             <TextField label="침투력" type="number" value={power} onChange={(e) => setPower(Number(e.target.value))} fullWidth required margin="normal" />
@@ -149,13 +172,13 @@ export default function AddCardPage() {
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <Button variant="outlined" onClick={() => navigate(`/admin/cards/seasons/${seasonId}`)} disabled={isSubmitting}>취소</Button>
                 <Button type="submit" variant="contained" disabled={isSubmitting}>
-                    {isSubmitting ? <CircularProgress size={24} /> : '저장'}
+                    {isSubmitting ? <CircularProgress size={24} /> : '수정 완료'}
                 </Button>
             </Box>
 
             {isSuccessModalOpen && (
                 <AlertModal
-                    message="카드가 성공적으로 등록되었습니다."
+                    message="카드가 성공적으로 수정되었습니다."
                     onClick={handleSuccessModalClose}
                 />
             )}

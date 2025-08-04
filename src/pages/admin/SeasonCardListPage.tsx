@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, Paper, IconButton, CircularProgress, Card } from '@mui/material';
+import { Box, Typography, Grid, Paper, IconButton, CircularProgress, Button, Stack } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import api from '../../common/axios';
 import { Card as CardType } from '../../components/card/dto';
 import CardItem from '../../components/card/CardItem';
-import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // CardDex에서 사용하는 카드 아이템 재사용
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ConfirmModal from "../../modal/ConfirmModal";
 
 interface SeasonInfo {
     id: number;
@@ -19,6 +20,7 @@ export default function SeasonCardListPage() {
     const [seasonInfo, setSeasonInfo] = useState<SeasonInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [cardSize, setCardSize] = useState(0);
+    const [cardToDelete, setCardToDelete] = useState<CardType | null>(null);
 
     useEffect(() => {
         if (!seasonId) return;
@@ -46,8 +48,31 @@ export default function SeasonCardListPage() {
     }, [seasonId]);
 
     const handleAddCardClick = () => {
-        navigate(`/admin/cards/seasons/${seasonId}/new`);
+        navigate('/admin/cards/add', { state: { seasonId: seasonId } });
+    }
+
+    const handleEditClick = (card: CardType) => {
+        navigate('/admin/cards/edit', { state: { cardId: card.id, seasonId: seasonId } });
     };
+
+    const handleDeleteClick = (card: CardType) => {
+        setCardToDelete(card);
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!cardToDelete) return;
+
+        try {
+            await api.delete(`/admin/card/${cardToDelete.id}`);
+            setCards(cards.filter(card => card.id !== cardToDelete.id));
+        } catch (error) {
+            console.log("카드 삭제에 실패했습니다.", error);
+        } finally {
+            setCardSize(cardSize - 1);
+            setCardToDelete(null);
+        }
+
+    }
 
     if (isLoading) {
         return (
@@ -97,9 +122,19 @@ export default function SeasonCardListPage() {
                 {cards.map((card) => (
                     <Grid key={card.id}>
                         <CardItem card={card} />
+                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                            <Button size="small" variant="outlined" fullWidth onClick={() => handleEditClick(card)}>수정</Button>
+                            <Button size="small" variant="outlined" color="error" fullWidth onClick={() => handleDeleteClick(card)}>삭제</Button>
+                        </Stack>
                     </Grid>
                 ))}
             </Grid>
+
+            {!!cardToDelete && <ConfirmModal
+                onCancel={() => setCardToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                message={`정말로 '${cardToDelete?.title}' 카드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+            />}
         </Box>
     );
 }
