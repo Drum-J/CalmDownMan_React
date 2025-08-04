@@ -46,9 +46,7 @@ export default function SeasonCardListPage() {
     }, [seasonId]);
 
     const handleAddCardClick = () => {
-        // TODO: 카드 추가 페이지로 이동
-        console.log(`시즌 ${seasonId}에 새 카드 추가`);
-        // navigate(`/admin/cards/seasons/${seasonId}/new`);
+        navigate(`/admin/cards/seasons/${seasonId}/new`);
     };
 
     if (isLoading) {

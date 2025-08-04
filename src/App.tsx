@@ -29,6 +29,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import CardManagement from "./pages/admin/CardManagement";
 import AddSeasonPage from "./pages/admin/AddSeasonPage";
 import SeasonCardListPage from "./pages/admin/SeasonCardListPage";
+import AddCardPage from "./pages/admin/AddCardPage";
 
 const router = createBrowserRouter([
     {
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
                             { path: "cards", element: <CardManagement /> },
                             { path: "cards/addSeason", element: <AddSeasonPage /> },
                             { path: "cards/seasons/:seasonId", element: <SeasonCardListPage /> },
+                            { path: "cards/seasons/:seasonId/new", element: <AddCardPage /> },
                         ]
                     }
                 ]

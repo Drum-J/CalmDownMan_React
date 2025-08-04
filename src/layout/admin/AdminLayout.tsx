@@ -47,8 +47,14 @@ export default function AdminLayout() {
                     ))}
                 </List>
             </Drawer>
-            <Box>
-                <Toolbar />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+            >
                 <Outlet />
             </Box>
         </Box>

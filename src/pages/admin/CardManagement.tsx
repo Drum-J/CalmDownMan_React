@@ -45,8 +45,8 @@ export default function CardManagement() {
 
     return (
         <Box>
-            <Typography variant="h5" gutterBottom>카드 시즌 관리</Typography>
-            <Box sx={{ display: 'flex', overflowX: 'auto', alignItems: 'flex-start', py: 2, gap: 3 }}>
+            <Typography variant="h4" gutterBottom>카드 시즌 관리</Typography>
+            <Box sx={{ display: 'flex', justifyContent:'center', alignItems: 'flex-start', py: 2, gap: 3 }}>
                 {seasons.map((season) => (
                     <Card key={season.id} sx={{ flexShrink: 0, width: 300 }}>
                         <CardActionArea onClick={() => handleSeasonClick(season.id)}>
