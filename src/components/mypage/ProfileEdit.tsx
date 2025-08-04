@@ -85,11 +85,17 @@ export default function ProfileEdit({ onCancel }: ProfileEditProps) {
             });
 
             if (response.data.data) {
-                setUserInfo(response.data.data);
+                const updatedUserInfo = response.data.data;
+                // S3에 동일한 URL로 이미지가 덮어씌워지므로, 브라우저 캐시를 무효화하기 위해 쿼리 파라미터를 추가합니다.
+                if (updatedUserInfo.profileImage) {
+                    updatedUserInfo.profileImage = `${updatedUserInfo.profileImage}?t=${new Date().getTime()}`;
+                }
+                setUserInfo(updatedUserInfo);
             }
             onCancel();
         } catch (error) {
             console.error('프로필 업데이트 실패:', error);
+            alert(error.response.data.data);
         } finally {
             setIsSubmitting(false);
         }
