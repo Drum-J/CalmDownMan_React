@@ -12,7 +12,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  max-width: 1200px;
+  max-width: 80%;
   margin: 0 auto; /* ⭐ 중앙 정렬 */
   padding: 0 20px;
 }
