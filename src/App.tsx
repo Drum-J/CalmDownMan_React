@@ -28,6 +28,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import CardManagement from "./pages/admin/CardManagement";
 import AddSeasonPage from "./pages/admin/AddSeasonPage";
+import SeasonCardListPage from "./pages/admin/SeasonCardListPage";
 
 const router = createBrowserRouter([
     {
@@ -80,6 +81,7 @@ const router = createBrowserRouter([
                             { path: "users", element: <UserManagement /> },
                             { path: "cards", element: <CardManagement /> },
                             { path: "cards/addSeason", element: <AddSeasonPage /> },
+                            { path: "cards/seasons/:seasonId", element: <SeasonCardListPage /> },
                         ]
                     }
                 ]
