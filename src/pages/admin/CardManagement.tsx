@@ -3,14 +3,8 @@ import { Box, Typography, Card, CardActionArea, CardMedia, CardContent, IconButt
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../common/axios';
+import { Season } from '../../components/card/dto';
 import AlertModal from "../../modal/AlertModal";
-
-// API 응답에 맞춘 시즌 데이터 타입
-interface Season {
-    id: number;
-    title: string;
-    imageUrl: string;
-}
 
 export default function CardManagement() {
     const [seasons, setSeasons] = useState<Season[]>([]);
@@ -38,8 +32,7 @@ export default function CardManagement() {
     };
 
     const handleSeasonClick = (seasonId: number) => {
-        console.log(`시즌 ${seasonId} 상세 보기`);
-        // navigate(`/admin/cards/seasons/${seasonId}`);
+        navigate(`/admin/cards/seasons/${seasonId}`);
     };
 
     if (isLoading) {

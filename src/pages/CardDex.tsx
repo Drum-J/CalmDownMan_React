@@ -34,7 +34,7 @@ export default function CardDex(): JSX.Element {
     } = useCardFilter(allCards);
 
     return (
-        <Container sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center' , gap: 2, mb: 2 }}>
                 <Typography variant="h4" gutterBottom>
                     카드 도감
@@ -66,6 +66,6 @@ export default function CardDex(): JSX.Element {
             </Box>
 
             <CardGrid cards={filteredCards} />
-        </Container>
+        </Box>
     );
 }
