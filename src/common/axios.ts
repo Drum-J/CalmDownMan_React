@@ -7,7 +7,8 @@ interface CustomAxiosError extends AxiosError {
 }
 
 const api: AxiosInstance = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    //baseURL: 'http://localhost:8080/api', // local
+    baseURL: 'https://api.chimonca.store/api', // prod
     headers: {
         'Content-Type': 'application/json',
     },
@@ -43,7 +44,8 @@ api.interceptors.response.use(
                 // 리프레시 토큰은 쿠키에 있으므로 자동으로 전송됨
                 const response = await axios.post<ApiResponse<string>>(
                     '/token/refresh', {}, {
-                        baseURL: 'http://localhost:8080/api',
+                        //baseURL: 'http://localhost:8080/api', // local
+                        baseURL: 'https://api.chimonca.store/api', // prod
                         withCredentials: true
                     });
 

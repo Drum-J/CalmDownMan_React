@@ -32,7 +32,8 @@ const GameMatchingModal = ({ open, onClose, selectedCards }: GameMatchingModalPr
             const cardIds = selectedCards.map(card => card.id);
 
             // 1. WebSocket 연결 및 구독 시작
-            const socket = new SockJS('http://localhost:8080/ws-connection');
+            //const socket = new SockJS('http://localhost:8080/ws-connection'); // local
+            const socket = new SockJS('https://api.chimonca.store/ws-connection'); // prod
             const client = new Client({
                     webSocketFactory: () => socket,
                     reconnectDelay: 5000,
