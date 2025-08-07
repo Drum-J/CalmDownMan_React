@@ -61,7 +61,7 @@ export default function Login(): JSX.Element {
         >
             <Paper elevation={3} sx={{ p: 4, width: 450, borderRadius: 2}}>
                 <Typography variant="h4" align="center" gutterBottom mb={4}>
-                    Chim Card Online
+                    Chim Online CardGame
                 </Typography>
                 <Box
                     component="form"
