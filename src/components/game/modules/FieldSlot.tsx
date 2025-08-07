@@ -52,19 +52,11 @@ const FieldSlot = ({ fieldNumber, card, isPlayer1, onClick }: FieldSlotProps) =>
                         style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
                     />
                 ) : (
-                    <Paper
-                        sx={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#4A5568', // 뒷면 색상
-                            borderRadius: '6px'
-                        }}
-                    >
-                        <Typography color="white">뒷면</Typography>
-                    </Paper>
+                    <img
+                        src="https://chimonca.s3.ap-northeast-2.amazonaws.com/cardBack.png"
+                        alt="card back"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
+                    />
                 )
             ) : (
                 <Typography color="text.secondary">{fieldNumber}</Typography>
