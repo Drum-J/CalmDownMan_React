@@ -13,6 +13,7 @@ export interface UserInfo {
     loseCount: number;
     drawCount: number;
     role: string;
+    createdAt: string;
 }
 
 interface UserContextType {
