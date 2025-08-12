@@ -3,7 +3,7 @@ import { useBlocker, useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../common/UserContext';
 import api from '../common/axios';
 import { ApiResponse } from '../common/ApiResponse';
-import {Box, Button, CircularProgress, Typography} from '@mui/material';
+import {Avatar, Box, Button, CircularProgress, Typography} from '@mui/material';
 import {
     GameInfoDto,
     FieldCardDto,
@@ -23,6 +23,7 @@ import ConfirmModal from "../modal/ConfirmModal";
 import OpponentDisconnectModal from "../modal/OpponentDisconnectModal";
 import TurnTimer from "../components/game/modules/TurnTimer";
 import usePreventLeave from "../hooks/usePreventLeave";
+import OpponentInfoModal from "../modal/OpponentInfoModal";
 
 const GameRoom = () => {
     const { gameRoomId } = useParams<{ gameRoomId: string }>();
@@ -55,6 +56,7 @@ const GameRoom = () => {
     const [gameWinnerId, setGameWinnerId] = useState<number | null>(null);
     const [showSurrenderConfirmModal, setShowSurrenderConfirmModal] = useState<boolean>(false);
     const [showOpponentDisconnectModal, setShowOpponentDisconnectModal] = useState<boolean>(false);
+    const [showOpponentInfoModal, setShowOpponentInfoModal] = useState<boolean>(false);
     const [opponentDisconnectTimeLeft, setOpponentDisconnectTimeLeft] = useState<number>(60);
     const [timeLeft, setTimeLeft] = useState(90);
     const stompClientRef = useRef<Client | null>(null);
@@ -514,11 +516,16 @@ const GameRoom = () => {
 
     return (
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '800px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '800px', alignItems: 'center' }}>
                 <Typography variant="h6">
                     내 필드: {isPlayer1 ? '블루' : '레드'}
                 </Typography>
-                <Typography variant="h5">상대: {gameInfo.otherPlayer}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1 }} onClick={() => setShowOpponentInfoModal(true)}>
+                    <Typography variant="h5">상대:</Typography>
+                    <Avatar src={gameInfo.otherPlayer.imageUrl} sx={{ width: 52, height: 52 }}/>
+                    <Typography variant="h5">{gameInfo.otherPlayer.nickname}</Typography>
+                </Box>
+
                 <Typography variant="h6">
                     현재 턴: {gameInfo.currentTurnPlayerId === userInfo?.id ? '나' : '상대'}
                 </Typography>
@@ -624,6 +631,12 @@ const GameRoom = () => {
             {showOpponentDisconnectModal && <OpponentDisconnectModal
                 open={showOpponentDisconnectModal}
                 timeLeft={opponentDisconnectTimeLeft}
+            />}
+
+            {gameInfo && <OpponentInfoModal
+                open={showOpponentInfoModal}
+                onClose={() => setShowOpponentInfoModal(false)}
+                opponent={gameInfo.otherPlayer}
             />}
         </Box>
     );

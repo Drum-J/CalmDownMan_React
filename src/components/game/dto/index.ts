@@ -1,6 +1,16 @@
+// 상대 플레이어 정보
+export interface OtherPlayerInfo {
+    nickname: string;
+    imageUrl: string;
+    rankScore: number;
+    win: number;
+    draw: number;
+    lose: number;
+}
+
 // 게임룸 진입 시 초기 데이터 DTO
 export interface GameInfoDto {
-    otherPlayer: string;
+    otherPlayer: OtherPlayerInfo;
     myCards: MyGameCardDto[];
     currentTurnPlayerId: number;
     player1Id: number;
