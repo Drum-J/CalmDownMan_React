@@ -32,7 +32,7 @@
 
 .podium-item.gold {
     order: 2;
-    height: 320px;
+    height: 360px;
     background: linear-gradient(160deg, #ffd700, #f4c10f);
     border: 4px solid #ffeb3b;
     box-shadow:
@@ -50,7 +50,7 @@
 }
 .podium-item.bronze {
     order: 3;
-    height: 230px;
+    height: 200px;
     background: linear-gradient(160deg, #d18b47, #a86b2f);
     border: 4px solid #e2a86f;
     box-shadow:

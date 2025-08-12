@@ -38,7 +38,7 @@ const Ranking = () => {
                     setError(response.data.message || 'Failed to fetch rankings.');
                 }
             } catch (err) {
-                setError('An error occurred while fetching rankings.');
+                setError('랭킹 정보를 가져오지 못했습니다.');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -75,21 +75,27 @@ const Ranking = () => {
                 {findByRank(2) && (
                     <Box className="podium-item silver">
                         <ProfileAvatar imageUrl={findByRank(2)!.imageUrl} nickname={findByRank(2)!.nickname} />
-                        <Box className="podium-nickname">{findByRank(2)!.nickname}</Box>
+                        <Box className="podium-nickname" title={findByRank(2)!.nickname}>
+                            {findByRank(2)!.nickname.length > 7 ? `${findByRank(2)!.nickname.slice(0,7)}...` : findByRank(2)!.nickname}
+                        </Box>
                         <Box className="podium-score">{findByRank(2)!.rankScore} ({findByRank(2)!.rating.toFixed(1)}%)</Box>
                     </Box>
                 )}
                 {findByRank(1) && (
                     <Box className="podium-item gold">
                         <ProfileAvatar imageUrl={findByRank(1)!.imageUrl} nickname={findByRank(1)!.nickname}/>
-                        <Box className="podium-nickname">{findByRank(1)!.nickname}</Box>
+                        <Box className="podium-nickname" title={findByRank(1)!.nickname}>
+                            {findByRank(1)!.nickname.length > 7 ? `${findByRank(1)!.nickname.slice(0,7)}...` : findByRank(1)!.nickname}
+                        </Box>
                         <Box className="podium-score">{findByRank(1)!.rankScore} ({findByRank(1)!.rating.toFixed(1)}%)</Box>
                     </Box>
                 )}
                 {findByRank(3) && (
                     <Box className="podium-item bronze">
                         <ProfileAvatar imageUrl={findByRank(3)!.imageUrl} nickname={findByRank(3)!.nickname} />
-                        <Box className="podium-nickname">{findByRank(3)!.nickname}</Box>
+                        <Box className="podium-nickname" title={findByRank(3)!.nickname}>
+                            {findByRank(3)!.nickname.length > 7 ? `${findByRank(3)!.nickname.slice(0,7)}...` : findByRank(3)!.nickname}
+                        </Box>
                         <Box className="podium-score">{findByRank(3)!.rankScore} ({findByRank(3)!.rating.toFixed(1)}%)</Box>
                     </Box>
                 )}
@@ -108,14 +114,14 @@ const Ranking = () => {
                         <TableRow key={player.username}>
                             <TableCell sx={{fontSize: 20}}>{player.rank}</TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 2 }}>
                                     <Avatar
                                         src={player.imageUrl}
                                         alt={player.nickname}
                                         sx={{ width: 52, height: 52 }}
                                     />
-                                    <Typography sx={{ fontWeight: 'bold' }}>
-                                        {player.nickname}
+                                    <Typography sx={{ fontWeight: 'bold' }} title={player.nickname}>
+                                        {player.nickname.length > 15 ? `${player.nickname.slice(0, 15)}...` : player.nickname}
                                     </Typography>
                                 </Box>
                             </TableCell>
