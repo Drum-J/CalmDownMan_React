@@ -47,6 +47,7 @@ export default function Header() {
                         <Link to="/">카드 뽑기</Link>
                         <Link to="/cardDex">도감</Link>
                         <Link to="/selectCards" state={{purpose: 'gameReady'}}>게임</Link>
+                        <Link to="/ranking">랭킹</Link>
                         <Link to="/trade">교환</Link>
                         <Link to="/mypage">마이페이지</Link>
                     </Stack>

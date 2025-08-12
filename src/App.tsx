@@ -18,6 +18,7 @@ import MyCards from "./pages/mypage/MyCards";
 import GameRecords from "./pages/mypage/GameRecords";
 import GameLobby from "./pages/GameLobby";
 import GameRoom from "./pages/GameRoom";
+import Ranking from "./pages/Ranking";
 import { UserProvider } from './common/UserContext';
 
 import Logout from './pages/Logout';
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
                     { path: "/selectCards", element: <SelectCardPage/> },
                     { path: "/trade/create", element: <TradePostCreate/> },
                     { path: "/game/lobby", element: <GameLobby/> },
+                    { path: "/ranking", element: <Ranking/> },
                     { path: "/gameRoom/:gameRoomId", element: <GameRoom/> },
                     {
                         path: "/mypage",
