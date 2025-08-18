@@ -17,6 +17,7 @@ import api from '../common/axios';
 import './Modal.css';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
+import { useNavigate } from 'react-router-dom';
 
 interface UserEditModalProps {
     user: UserInfo | null;
@@ -41,6 +42,7 @@ const style = {
 };
 
 export default function UserEditModal({ user, open, onClose, onSave }: UserEditModalProps) {
+    const navigate = useNavigate();
     const [role, setRole] = useState(user?.role || 'USER');
     const [pointsToAdd, setPointsToAdd] = useState(0);
 
@@ -114,6 +116,13 @@ export default function UserEditModal({ user, open, onClose, onSave }: UserEditM
         setConfirmOpen(true);
     };
 
+    const handleCardSupplyClick = () => {
+        if (user) {
+            navigate('/admin/cardSupply', { state: { user } });
+            onClose();
+        }
+    };
+
     const handleConfirm = () => {
         if (onConfirmAction) {
             onConfirmAction();
@@ -152,6 +161,8 @@ export default function UserEditModal({ user, open, onClose, onSave }: UserEditM
                         sx={{ mb: 1 }}
                     />
                     <Button variant="contained" color="success" onClick={handleGrantPointsClick} fullWidth>포인트 지급</Button>
+
+                    <Button variant="contained" color="info" onClick={handleCardSupplyClick} fullWidth sx={{ mt: 2 }}>카드 지급</Button>
                 </Box>
 
                 <Button onClick={onClose} sx={{ mt: 3 }}>닫기</Button>

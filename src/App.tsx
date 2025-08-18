@@ -32,6 +32,8 @@ import AddSeasonPage from "./pages/admin/AddSeasonPage";
 import SeasonCardListPage from "./pages/admin/SeasonCardListPage";
 import AddCardPage from "./pages/admin/AddCardPage";
 import EditCardPage from "./pages/admin/EditCardPage";
+import CardSupplyPage from "./pages/admin/CardSupplyPage";
+import CardSupplyConfirmPage from "./pages/admin/CardSupplyConfirmPage";
 
 const router = createBrowserRouter([
     {
@@ -88,6 +90,8 @@ const router = createBrowserRouter([
                             { path: "cards/seasons/:seasonId", element: <SeasonCardListPage /> },
                             { path: "cards/add", element: <AddCardPage /> },
                             { path: "cards/edit", element: <EditCardPage /> },
+                            { path: "cardSupply", element: <CardSupplyPage /> },
+                            { path: "cardSupplyConfirm", element: <CardSupplyConfirmPage /> },
                         ]
                     }
                 ]
